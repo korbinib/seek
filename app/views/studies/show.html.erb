@@ -16,15 +16,6 @@
 
         <%= render :partial => 'projects/show_project_relationship', :locals => {:resource => @study}%>
 
-        <p>
-          <label><%= t('person_responsible').capitalize %>:</label>
-          <% if @study.person_responsible.try :can_view? -%>
-              <%= link_to @study.person_responsible.name,@study.person_responsible %>
-          <% else -%>
-              <span class="none_text">Not available</span>
-          <% end -%>
-        </p>
-
         <% unless @study.experimentalists.blank? %>
           <p>
             <b>Experimentalists:</b>

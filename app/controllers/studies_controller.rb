@@ -90,17 +90,6 @@ class StudiesController < ApplicationController
     end
   end
 
-  def investigation_selected_ajax
-    if (investigation_id = params[:investigation_id]).present? && params[:investigation_id] != '0'
-      investigation = Investigation.find(investigation_id)
-      people = investigation.projects.collect(&:people).flatten
-    end
-
-    people ||= []
-
-    render partial: 'studies/person_responsible_list', locals: { people: people }
-  end
-
   def check_assays_are_not_already_associated_with_another_study
     assay_ids = params[:study][:assay_ids]
     study_id = params[:id]
@@ -165,7 +154,6 @@ class StudiesController < ApplicationController
         title: params[:studies][:title][index],
         description: params[:studies][:description][index],
         investigation_id: params[:study][:investigation_id],
-        person_responsible_id: params[:study][:person_responsible_id],
         custom_metadata: CustomMetadata.new(
           custom_metadata_type: metadata_types,
           data: metadata
@@ -310,16 +298,8 @@ class StudiesController < ApplicationController
   end
 
   private
-  def validate_person_responsible(p)
-    if (!p[:person_responsible_id].nil?) && (!Person.exists?(p[:person_responsible_id]))
-      render json: {error: 'Person responsible does not exist', status: :unprocessable_entity}, status: :unprocessable_entity
-      return false
-    end
-    true
-  end
-
   def study_params
-    params.require(:study).permit(:title, :description, :experimentalists, :investigation_id, :person_responsible_id,
+    params.require(:study).permit(:title, :description, :experimentalists, :investigation_id,
                                   :other_creators, { creator_ids: [] }, { scales: [] }, { publication_ids: [] },
                                   { discussion_links_attributes:[:id, :url, :label, :_destroy] },
                                   { custom_metadata_attributes: determine_custom_metadata_keys })

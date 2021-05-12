@@ -387,7 +387,6 @@ SEEK::Application.routes.draw do
       post :preview_content
       post :batch_create
       post :create_content_blob
-      post :investigation_selected_ajax
       post :items_for_result
     end
     resources :snapshots, :only => [:show, :new, :create, :destroy] do

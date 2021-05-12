@@ -118,7 +118,6 @@ describe Study do
   it { should have_searchable_field(:projects) }
 
   it { should have_searchable_field(:experimentalists) }
-  it { should have_searchable_field(:person_responsible) }
 end
 
 describe Investigation do
