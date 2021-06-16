@@ -15,7 +15,7 @@ module Seek
 
       def has_tests?
         open_crate do |crate|
-          crate.test_directory.present?
+          crate.test_suites.any?
         end
       end
 
@@ -77,6 +77,8 @@ module Seek
             handler = ContentBlob.remote_content_handler_for(source_url)
             if handler.respond_to?(:repository_url)
               source_url = handler.repository_url
+            elsif handler.respond_to?(:display_url)
+              source_url = handler.display_url
             end
             m[:source_link_url] = source_url
           end
