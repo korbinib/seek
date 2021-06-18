@@ -395,7 +395,7 @@ class WorkflowsControllerTest < ActionController::TestCase
     assert_response :success
     assert wf = assigns(:workflow)
     refute_nil wf.content_blob
-    assert_equal wf.content_blob.id, session[:uploaded_content_blob_id]
+    assert_select '#content_blob_uuid[value=?]', wf.content_blob.uuid
     assert_equal cwl, wf.workflow_class
   end
 
@@ -428,30 +428,24 @@ class WorkflowsControllerTest < ActionController::TestCase
     assert_response :success
     assert wf = assigns(:workflow)
     refute_nil wf.content_blob
-    assert_equal wf.content_blob.id, session[:uploaded_content_blob_id]
     assert_equal cwl, wf.workflow_class
     assert_equal 'new-workflow.basic.crate.zip', wf.content_blob.original_filename
   end
 
   test 'extract metadata' do
     cwl = Factory(:cwl_workflow_class)
-    blob = Factory(:cwl_packed_content_blob)
-    session[:uploaded_content_blob_id] = blob.id.to_s
-    post :metadata_extraction_ajax, params: { content_blob_id: blob.id.to_s, format: 'js', workflow_class_id: cwl.id }
+    post :create_content_blob, params: { content_blobs: [{ data: fixture_file_upload('files/workflows/rp2-to-rp2path-packed.cwl', 'text/plain') }], workflow_class_id: cwl.id }
     assert_response :success
-    assert_equal 12, session[:metadata][:internals][:inputs].length
+    assert_equal 12, assigns[:metadata][:internals][:inputs].length
   end
 
   test 'extract metadata from remote should perform inline and cancel remote content fetch job' do
     mock_remote_file "#{Rails.root}/test/fixtures/files/workflows/rp2-to-rp2path-packed.cwl", 'https://www.abc.com/workflow.cwl'
     cwl = Factory(:cwl_workflow_class)
-    blob = Factory(:url_cwl_content_blob)
-    blob.remote_content_fetch_task.start
-    session[:uploaded_content_blob_id] = blob.id.to_s
-    post :metadata_extraction_ajax, params: { content_blob_id: blob.id.to_s, format: 'js', workflow_class_id: cwl.id }
-    assert blob.reload.remote_content_fetch_task.cancelled?
+    post :create_content_blob, params: { content_blobs: [{ data_url: 'https://www.abc.com/workflow.cwl' }], workflow_class_id: cwl.id }
+    assert assigns[:workflow].content_blob.reload.remote_content_fetch_task.cancelled?
     assert_response :success
-    assert_equal 12, session[:metadata][:internals][:inputs].length
+    assert_equal 12, assigns[:metadata][:internals][:inputs].length
   end
 
   test 'missing diagram and no CWL viewer available returns 404' do
@@ -661,7 +655,7 @@ class WorkflowsControllerTest < ActionController::TestCase
     workflow =  {title: 'workflow', project_ids: [person.projects.first.id], discussion_links_attributes:[{url: "http://www.slack.com/", label:'our slack'}]}
     assert_difference('AssetLink.discussion.count') do
       assert_difference('Workflow.count') do
-          post :create_metadata, params: {workflow: workflow, content_blob_id: blob.id.to_s, policy_attributes: { access_type: Policy::VISIBLE }}
+          post :create_metadata, params: {workflow: workflow, content_blob_uuid: blob.uuid.to_s, policy_attributes: { access_type: Policy::VISIBLE }}
       end
     end
     workflow = assigns(:workflow)
@@ -787,7 +781,7 @@ class WorkflowsControllerTest < ActionController::TestCase
 
     assert_no_difference('ContentBlob.count') do
       assert_difference('Workflow::Version.count') do
-        post :create_version_metadata, params: { id: workflow.id, workflow: workflow_params, content_blob_id: blob.id.to_s }
+        post :create_version_metadata, params: { id: workflow.id, workflow: workflow_params, content_blob_uuid: blob.uuid.to_s }
       end
     end
 
@@ -803,11 +797,9 @@ class WorkflowsControllerTest < ActionController::TestCase
     mock_remote_file "#{Rails.root}/test/fixtures/files/workflows/rp2-to-rp2path-packed.cwl", 'https://raw.githubusercontent.com/bob/workflow/master/abstract.cwl'
 
     galaxy = Factory(:galaxy_workflow_class)
-    blob = Factory(:fully_remote_ro_crate)
-    session[:uploaded_content_blob_id] = blob.id.to_s
-    post :metadata_extraction_ajax, params: { content_blob_id: blob.id.to_s, format: 'js', workflow_class_id: galaxy.id }
+    post :create_content_blob, params: { content_blobs: [{ data: fixture_file_upload('files/workflows/all_remote.crate.zip', 'application/zip') }], workflow_class_id: galaxy.id }
     assert_response :success
-    assert_equal 12, session[:metadata][:internals][:inputs].length
+    assert_equal 12, assigns[:metadata][:internals][:inputs].length
   end
 
   test 'filter by test status' do
@@ -849,6 +841,158 @@ class WorkflowsControllerTest < ActionController::TestCase
 
     assert_equal 'Galaxy', assigns(:workflow).workflow_class_title
     assert_equal g.id, assigns(:workflow).workflow_class_id
+  end
+
+  test 'RO-Crate with no main workflow throws error' do
+    assert_no_difference('GitRepository.count') do
+      post :create_from_ro_crate, params: {
+        ro_crate: { data: fixture_file_upload('files/workflows/no-main-workflow.crate.zip', 'application/zip') }
+      }
+    end
+
+    assert assigns(:crate_extractor).errors.added?(:ro_crate, 'did not specify a main workflow.')
+  end
+
+  test 'can get edit paths page' do
+    workflow = Factory(:git_version).resource
+    login_as(workflow.contributor)
+
+    get :edit_paths, params: { id: workflow.id }
+
+    assert_response :success
+  end
+
+  test 'cannot get edit paths page if not authorized' do
+    logout
+    workflow = Factory(:git_version).resource
+
+    get :edit_paths, params: { id: workflow.id }
+
+    assert_redirected_to workflow_path(workflow)
+  end
+
+  test 'can update paths' do
+    workflow = Factory(:git_version).resource
+    login_as(workflow.contributor)
+
+    assert_difference('GitAnnotation.count', 2) do
+      patch :update_paths, params: { id: workflow.id,
+                                     git_version: { diagram_path: 'diagram.png',
+                                                    main_workflow_path: 'concat_two_files.ga' },
+                                     workflow: { workflow_class_id: Factory(:galaxy_workflow_class).id } }
+
+      assert_redirected_to workflow_path(workflow)
+    end
+  end
+
+  test 'cannot update paths if not authorized' do
+    workflow = Factory(:git_version).resource
+    logout
+
+    assert_no_difference('GitAnnotation.count') do
+      patch :update_paths, params: { id: workflow.id,
+                                     git_version: { diagram_path: 'diagram.png',
+                                                    main_workflow_path: 'concat_two_files.ga' },
+                                     workflow: { workflow_class_id: Factory(:galaxy_workflow_class).id } }
+
+      assert_redirected_to workflow_path(workflow)
+      assert flash[:error].include?('authorized')
+    end
+  end
+
+  test 'can update paths and extract metadata' do
+    workflow = Factory(:git_version).resource
+    login_as(workflow.contributor)
+
+    assert_not_equal 'Concat two files', workflow.title
+
+    assert_difference('GitAnnotation.count', 2) do
+      patch :update_paths, params: { id: workflow.id,
+                                     git_version: { diagram_path: 'diagram.png',
+                                                    main_workflow_path: 'concat_two_files.ga' },
+                                     workflow: { workflow_class_id: Factory(:galaxy_workflow_class).id },
+                                     extract_metadata: '1' }
+
+      assert_response :success
+    end
+
+    assert_equal 'Concat two files', assigns(:workflow).title
+  end
+
+  test 'new version form for git-versioned workflow redirect to new_git_version' do
+    with_config_value(:git_support_enabled, false) do
+      workflow = Factory(:git_version).resource
+      login_as(workflow.contributor)
+
+      assert workflow.is_git_versioned?
+
+      get :new_version, params: { id: workflow.id }
+
+      assert_redirected_to new_git_version_workflow_path(workflow)
+    end
+  end
+
+  test 'get new version form for non-git-versioned workflow' do
+    workflow = Factory(:workflow)
+    login_as(workflow.contributor)
+
+    refute workflow.is_git_versioned?
+
+    get :new_version, params: { id: workflow.id }
+
+    assert_select 'a[href=?]', '#new-ro-crate'
+    assert_select 'a[href=?]', '#git-repo', count: 0
+    assert_select 'a[href=?]', '#existing-ro-crate'
+  end
+
+  test 'get new workflow form' do
+    with_config_value(:git_support_enabled, false) do
+      get :new
+    end
+
+    assert_select 'a[href=?]', '#new-ro-crate'
+    assert_select 'a[href=?]', '#git-repo', count: 0
+    assert_select 'a[href=?]', '#existing-ro-crate'
+  end
+
+  test 'get new workflow form with git support enabled' do
+    with_config_value(:git_support_enabled, true) do
+      get :new
+    end
+
+    assert_select 'a[href=?]', '#new-ro-crate'
+    assert_select 'a[href=?]', '#git-repo'
+    assert_select 'a[href=?]', '#existing-ro-crate'
+  end
+
+  test 'get new git version page for remote git repo' do
+    workflow = Factory(:remote_git_version).resource
+    login_as(workflow.contributor)
+
+    assert workflow.is_git_versioned?
+
+    assert_no_difference('GitVersion.count') do
+      assert_enqueued_jobs(1, only: RemoteGitFetchJob) do
+        post :new_git_version, params: { id: workflow.id }
+      end
+    end
+
+    assert_redirected_to select_ref_git_repository_path(workflow.git_version.git_repository, resource_type: 'workflow', resource_id: workflow.id)
+  end
+
+  test 'get new git version page for local git repo' do
+    workflow = Factory(:git_version).resource
+    login_as(workflow.contributor)
+
+    assert workflow.is_git_versioned?
+
+    assert_difference('GitVersion.count', 1) do
+      assert_no_enqueued_jobs(only: RemoteGitFetchJob) do
+        post :new_git_version, params: { id: workflow.id }
+      end
+    end
+
+    assert_redirected_to workflow_path(workflow)
   end
 
   def edit_max_object(workflow)

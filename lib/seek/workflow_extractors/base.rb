@@ -24,11 +24,11 @@ module Seek
       available_diagram_formats(png: 'image/png', svg: 'image/svg+xml', jpg: 'image/jpeg', default: :png)
 
       def initialize(io)
-        @io = io
+        @io = io.is_a?(String) ? StringIO.new(io) : io
       end
 
       def metadata
-        { warnings: [], errors: [] }
+        { }
       end
 
       def has_tests?
@@ -39,7 +39,7 @@ module Seek
         false
       end
 
-      def diagram(format = default_diagram_format)
+      def generate_diagram(format = default_diagram_format)
         nil
       end
 
@@ -49,6 +49,10 @@ module Seek
 
       def self.workflow_class
         WorkflowClass.find_by_key(name.demodulize.underscore)
+      end
+
+      def self.file_extensions
+        []
       end
     end
   end

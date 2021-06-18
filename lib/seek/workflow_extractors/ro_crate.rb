@@ -25,17 +25,17 @@ module Seek
         end
       end
 
-      def diagram(format = nil)
+      def generate_diagram(format = nil)
         open_crate do |crate|
           format ||= default_diagram_format
 
           return crate.main_workflow_diagram&.source&.read if crate.main_workflow_diagram
 
           extractor = main_workflow_extractor(crate)
-          return extractor.diagram(format) if extractor&.can_render_diagram?
+          return extractor.generate_diagram(format) if extractor&.can_render_diagram?
 
           extractor = abstract_cwl_extractor(crate)
-          return extractor.diagram(format) if extractor&.can_render_diagram?
+          return extractor.generate_diagram(format) if extractor&.can_render_diagram?
 
           return nil
         end
@@ -100,7 +100,12 @@ module Seek
         end
 
         v = Dir.mktmpdir('ro-crate') do |dir|
-          @opened_crate = ::ROCrate::WorkflowCrateReader.read_zip(@io.is_a?(ContentBlob) ? @io.data_io_object : @io, target_dir: dir)
+          if @io.respond_to?(:in_dir)
+            @io.in_dir(dir)
+            @opened_crate = ::ROCrate::WorkflowCrateReader.read(dir)
+          else
+            @opened_crate = ::ROCrate::WorkflowCrateReader.read_zip(@io.is_a?(ContentBlob) ? @io.data_io_object : @io, target_dir: dir)
+          end
           yield @opened_crate
         end
 

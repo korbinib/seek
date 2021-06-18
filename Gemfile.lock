@@ -25,6 +25,13 @@ GIT
     my_responds_to_parent (1.0.0)
 
 GIT
+  remote: https://github.com/ruby-git/ruby-git.git
+  revision: d1908f69f3248a8afbe7fa6e55f647eb8f669619
+  specs:
+    git (1.7.0)
+      rchardet (~> 1.8)
+
+GIT
   remote: https://github.com/seek4science/DOI-query-tool.git
   revision: e7a8790f666b9b20e22149d6a450ed85e60504d3
   specs:
@@ -226,8 +233,6 @@ GEM
     ffi (1.9.25)
     fssm (0.2.10)
     gem-licenses (0.2.2)
-    git (1.6.0)
-      rchardet (~> 1.8)
     globalid (0.4.2)
       activesupport (>= 4.2.0)
     google-analytics-rails (1.1.0)
@@ -650,6 +655,7 @@ GEM
     ruby-progressbar (1.10.1)
     rubyntlm (0.3.4)
     rubyzip (2.0.0)
+    rugged (1.1.0)
     sample-template-generator (0.6.0)
       rdoc (~> 6.0)
       terrapin (~> 0.6)
@@ -834,7 +840,7 @@ DEPENDENCIES
   fleximage!
   fssm
   gem-licenses
-  git
+  git!
   google-analytics-rails
   handlebars_assets
   hpricot (~> 0.8.2)
@@ -900,6 +906,7 @@ DEPENDENCIES
   rubocop
   ruby-prof
   rubyzip
+  rugged
   sample-template-generator (~> 0.5)
   sass-rails (~> 5.0)
   savon (= 1.1.0)

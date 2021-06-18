@@ -135,7 +135,9 @@ gem 'bundler', '>= 1.8.4'
 
 gem 'ro-crate', '~> 0.4.9'
 
-gem 'git'
+gem 'git', git: 'https://github.com/ruby-git/ruby-git.git'
+gem 'rugged'
+
 gem 'redcarpet'
 gem 'i18n-js'
 gem 'whenever', '~> 1.0.0', require: false

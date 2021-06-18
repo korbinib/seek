@@ -1,6 +1,10 @@
 module Seek
   module WorkflowExtractors
     class KNIME < Base
+      def self.file_extensions
+        ['knwf']
+      end
+
       def metadata
         metadata = super
         knime_string = @io.read

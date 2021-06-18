@@ -116,6 +116,23 @@ SEEK::Application.routes.draw do
     end
   end
 
+  concern :git do
+    nested do
+      scope controller: :git, path: '/git(/*version)', constraints: { path: /.+/ }, format: false, defaults: { format: :html }  do
+        get 'tree(/*path)' => 'git#tree', as: :git_tree
+        get 'blob/*path' => 'git#blob', as: :git_blob
+        get 'raw/*path' => 'git#raw', as: :git_raw
+        get 'download/*path' => 'git#download', as: :git_download
+        get 'browse' => 'git#browse', as: :git_browse
+        post 'add' => 'git#add_file', as: :git_add_file
+        delete 'remove' => 'git#remove_file', as: :git_remove_file
+        patch 'move' => 'git#move_file', as: :git_move_file
+        get 'freeze' => 'git#freeze_preview', as: :git_freeze_preview
+        post 'freeze' => 'git#freeze', as: :git_freeze
+      end
+    end
+  end
+
   resources :scales do
     collection do
       post :search
@@ -520,19 +537,26 @@ SEEK::Application.routes.draw do
     resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :workflows, :collections, only: [:index]
   end
 
-  resources :workflows, concerns: [:has_content_blobs, :publishable, :has_doi, :has_versions, :asset] do
+  resources :workflows, concerns: [:has_content_blobs, :publishable, :has_doi, :has_versions, :asset, :git] do
     collection do
-      post :create_content_blob
-      post :create_ro_crate
+      post :create_from_ro_crate
+      post :create_from_files
+      post :create_from_git
       get :provide_metadata
-      post :metadata_extraction_ajax
+      get :annotate_repository
       post :create_metadata
+
+      post :create_content_blob # Legacy
+      post :create_ro_crate # Legacy
     end
     member do
       get :diagram
       get :ro_crate
       get :new_version
+      post :new_git_version
       post :create_version_metadata
+      get :edit_paths
+      patch :update_paths
     end
     resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :sops, :collections, only: [:index]
   end
@@ -700,6 +724,13 @@ SEEK::Application.routes.draw do
       member do
         post :select
       end
+    end
+  end
+
+  resources :git_repositories do
+    member do
+      get :select_ref
+      get :fetch_status
     end
   end
 

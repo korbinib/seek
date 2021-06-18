@@ -53,6 +53,10 @@ module Seek
 
         # create the dynamic versioned model
         const_set(versioned_class_name, Class.new(ApplicationRecord)).class_eval do
+          def name
+            "Version #{version}"
+          end
+
           def self.reloadable?
             false
           end
@@ -71,6 +75,10 @@ module Seek
 
           def is_a_version?
             true
+          end
+
+          def is_git_versioned?
+            false
           end
 
           def visibility= key
@@ -103,6 +111,10 @@ module Seek
           def set_default_visibility
             self.visibility ||= self.class.default_visibility
           end
+
+          def cache_key_fragment
+            "#{parent.class.name.underscore}-#{parent.id}-#{version}"
+          end
         end
 
         versioned_class.table_name = versioned_table_name
@@ -124,6 +136,7 @@ module Seek
     module ActMethods
       def self.included(base) # :nodoc:
         base.extend ClassMethods
+        base.include Seek::Git::VersioningCompatibility
       end
 
       # Finds a specific version of this model.
@@ -215,10 +228,6 @@ module Seek
       end
 
       def empty_callback() end #:nodoc:
-
-      def is_a_version?
-        false
-      end
 
       def visible_versions(user = User.current_user)
         scopes = [ExplicitVersioning::VISIBILITY_INV[:public]]

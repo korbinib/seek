@@ -195,7 +195,7 @@ namespace :seek do
     puts '... Updating session store'
     Rake::Task['db:sessions:upgrade'].invoke
   end
-  
+
   task(update_cv_sample_templates: :environment) do
     puts '... Queue jobs for Sample templates containing controlled vocabularies'
     SampleType.all.each do |st|

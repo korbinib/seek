@@ -20,6 +20,22 @@ class Workflow < ApplicationRecord
 
   has_and_belongs_to_many :sops
 
+  git_versioning do
+    include WorkflowExtraction
+    acts_as_doi_mintable(proxy: :parent, general_type: 'Workflow')
+    after_save do
+      FileUtils.rm(Dir.glob(cached_diagram_path('*'))) if diagram_path_changed?
+    end
+
+    def maturity_level
+      Workflow::MATURITY_LEVELS[super]
+    end
+
+    def workflow_class
+      WorkflowClass.find_by_id(workflow_class_id)
+    end
+  end
+
   explicit_versioning(version_column: 'version', sync_ignore_columns: ['doi', 'test_status']) do
     after_commit :submit_to_life_monitor, on: [:create, :update]
     after_commit :sync_test_status, on: [:create, :update]
@@ -67,6 +83,12 @@ class Workflow < ApplicationRecord
     def sync_test_status
       parent.update_column(:test_status, Workflow::TEST_STATUS_INV[test_status]) if latest_version?
     end
+  end
+
+  attr_reader :extracted_metadata
+  def provide_metadata(metadata)
+    @extracted_metadata = metadata
+    assign_attributes(metadata)
   end
 
   def avatar_key
