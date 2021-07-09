@@ -1,4 +1,6 @@
 class GitController < ApplicationController
+  include Seek::MimeTypes
+
   before_action :fetch_parent
   before_action :authorize_parent
   before_action :authorized_to_edit, only: [:add_file, :remove_file, :move_file, :freeze]
@@ -9,6 +11,7 @@ class GitController < ApplicationController
   user_content_actions :raw
 
   rescue_from Seek::Git::ImmutableVersionException, with: :render_immutable_error
+  rescue_from Seek::Git::PathNotFoundException, with: :render_path_not_found_error
 
   def browse
     respond_to do |format|
@@ -44,14 +47,21 @@ class GitController < ApplicationController
     if @blob.binary?
       send_data(@blob.content, filename: path_param.split('/').last, disposition: 'inline')
     else
-      respond_to do |format|
-        format.all { render plain: @blob.content }
-      end
+      # Set Content-Type if it's an image to allow use in img tags
+      ext = path_param.split('/').last&.split('.')&.last&.downcase
+      content_type = if Seek::ContentTypeDetection::IMAGE_VIEWABLE_FORMAT.include?(ext)
+                       mime_types_for_extension(path_param.split('.').last).first
+                     else
+                       'text/plain'
+                     end
+      render body: @blob.content, content_type: content_type
     end
   end
 
   def add_file
-    @git_version.add_file(file_params[:path], file_params[:data])
+    path = file_params[:path]
+    path = file_params[:data].original_filename if path.blank?
+    @git_version.add_file(path, file_params[:data])
     @git_version.save!
 
     flash[:notice] = "Uploaded #{file_params[:path]}"
@@ -93,7 +103,14 @@ class GitController < ApplicationController
   def render_immutable_error
     flash[:error] = 'This version cannot be modified.'
     respond_to do |format|
-      format.html { render status: :unprocessable_entity }
+      format.html { redirect_to polymorphic_path(@parent_resource, anchor: 'files') }
+    end
+  end
+
+  def render_path_not_found_error(ex)
+    flash[:error] = "Couldn't find path: #{ex.path}"
+    respond_to do |format|
+      format.html { redirect_to polymorphic_path(@parent_resource, anchor: 'files') }
     end
   end
 
@@ -106,7 +123,7 @@ class GitController < ApplicationController
 
     return if @tree&.is_a?(Rugged::Tree)
 
-    raise ActionController::RoutingError.new('Not Found')
+    raise Seek::Git::PathNotFoundException.new(path: path_param)
   end
 
   def get_blob
@@ -114,7 +131,7 @@ class GitController < ApplicationController
 
     return if @blob&.is_a?(Rugged::Blob)
 
-    raise ActionController::RoutingError.new('Not Found')
+    raise Seek::Git::PathNotFoundException.new(path: path_param)
   end
 
   def path_param

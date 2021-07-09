@@ -1102,8 +1102,7 @@ span.disabled {
   &.allow-blob-select .git-jstree-blob > i.jstree-checkbox {
     display: inherit;
   }
-
-  .jstree-leaf:hover .git-jstree-blob {
+  &.allow-blob-preview .jstree-leaf:hover .git-jstree-blob {
     text-decoration: underline;
   }
 }
@@ -1152,4 +1151,18 @@ input.git-path {
 
 .git-image-preview {
   max-width: 100%;
+}
+
+ul.workflow-port-type {
+  padding-left: 0;
+  li {
+    list-style-type: none;
+  }
+  li + li:before {
+    content: 'or';
+    color: #ccc;
+  }
+  ul.workflow-port-type {
+    padding-left: 2em;
+  }
 }

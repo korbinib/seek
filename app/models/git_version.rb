@@ -222,9 +222,21 @@ class GitVersion < ApplicationRecord
   end
 
   def method_missing(method, *args, &block)
-    if resource_attributes.key?(method.to_s) && args.empty?
-      resource_attributes[method.to_s]
-    elsif resource.respond_to?(method)
+    s_method = method.to_s
+    setter = false
+    if s_method.end_with?('=')
+      setter = true
+      s_method.chomp!('=')
+      method = s_method.to_sym
+    end
+    if resource_attributes.key?(s_method)
+      args.unshift(s_method)
+      if setter
+        resource_attributes.send(:[]=, *args)
+      else
+        resource_attributes.send(:[], *args)
+      end
+    elsif !setter && resource.respond_to?(method)
       resource.public_send(method, *args, &block)
     else
       super
