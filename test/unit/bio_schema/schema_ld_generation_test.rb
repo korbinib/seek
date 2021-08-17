@@ -27,7 +27,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
         'name' => 'SysMO-DB',
         'url' => 'http://fairyhub.org'
       },
-      'dateCreated' => @current_time.to_s
+      'dateCreated' => @current_time.iso8601
     }
     with_config_value(:project_description, 'a lovely project') do
       with_config_value(:project_keywords, 'a,  b, ,,c,d') do
@@ -69,7 +69,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
 
   test 'dataset' do
     df = travel_to(@current_time) do
-      df = Factory(:max_data_file, contributor: @person, projects: [@project], policy: Factory(:public_policy), doi: '10.10.10.10/test.1')
+      df = Factory(:max_data_file, description: 'short desc', contributor: @person, projects: [@project], policy: Factory(:public_policy), doi: '10.10.10.10/test.1')
       df.add_annotations('keyword', 'tag', User.first)
       disable_authorization_checks { df.save! }
       df
@@ -83,7 +83,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       '@type' => 'Dataset',
       '@id' => "http://localhost:3000/data_files/#{df.id}",
       'name' => df.title,
-      'description' => df.description,
+      'description' => df.description.ljust(50,'.'),
       'keywords' => 'keyword',
       'url' => "http://localhost:3000/data_files/#{df.id}",
       'creator' => [{ '@type' => 'Person', '@id' => "##{ROCrate::Entity.format_id('Blogs')}", 'name' => 'Blogs' }, { '@type' => 'Person', '@id' => "##{ROCrate::Entity.format_id('Joe')}", 'name' => 'Joe' }],
@@ -92,8 +92,8 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
         '@id' => "http://localhost:3000/projects/#{@project.id}",
         'name' => @project.title
       }],
-      'dateCreated' => @current_time.to_s,
-      'dateModified' => @current_time.to_s,
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,
       'encodingFormat' => 'application/pdf',
       'identifier' => 'https://doi.org/10.10.10.10/test.1',
       'subjectOf' => [
@@ -116,8 +116,9 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       }
     }
 
-    json = JSON.parse(df.to_schema_ld)
+    json = JSON.parse(df.to_schema_ld)    
     assert_equal expected, json
+    check_version(df.latest_version, expected)
   end
 
   test 'dataset without content blob' do
@@ -149,8 +150,8 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
         '@id' => "http://localhost:3000/projects/#{@project.id}",
         'name' => @project.title
       }],
-      'dateCreated' => @current_time.to_s,
-      'dateModified' => @current_time.to_s,      
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,      
       'identifier' => 'https://doi.org/10.10.10.10/test.1',
       'subjectOf' => [
         { '@type' => 'Event',
@@ -167,7 +168,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
 
     json = JSON.parse(df.to_schema_ld)
     assert_equal expected, json
-    
+    check_version(df.latest_version, expected)
   end
 
   test 'dataset with weblink' do
@@ -197,8 +198,8 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
         '@id' => "http://localhost:3000/projects/#{@project.id}",
         'name' => @project.title
       }],
-      'dateCreated' => @current_time.to_s,
-      'dateModified' => @current_time.to_s,
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,
       'encodingFormat' => 'text/html',
       'identifier' => 'https://doi.org/10.10.10.10/test.1',
       "sdPublisher"=>{
@@ -216,6 +217,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
 
     json = JSON.parse(df.to_schema_ld)
     assert_equal expected, json
+    check_version(df.latest_version, expected)
   end
 
   test 'taxon' do
@@ -330,8 +332,8 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       'name' => 'This Document',
       'url' => "http://localhost:3000/documents/#{document.id}",
       'keywords' => 'wibble',
-      'dateCreated' => @current_time.to_s,
-      'dateModified' => @current_time.to_s,
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,
       'encodingFormat' => 'application/pdf',
       'producer' => [
         { '@type' => %w[Project Organization], '@id' => "http://localhost:3000/projects/#{document.projects.first.id}", 'name' => document.projects.first.title }
@@ -346,6 +348,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
 
     json = JSON.parse(document.to_schema_ld)
     assert_equal expected, json
+    check_version(document.latest_version, expected)
   end
 
   test 'presentation' do
@@ -363,8 +366,8 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       'name' => 'This presentation',
       'url' => "http://localhost:3000/presentations/#{presentation.id}",
       'keywords' => 'wibble',
-      'dateCreated' => @current_time.to_s,
-      'dateModified' => @current_time.to_s,
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,
       'encodingFormat' => 'application/pdf',
       'producer' => [
         { '@type' => %w[Project Organization], '@id' => "http://localhost:3000/projects/#{presentation.projects.first.id}", 'name' => presentation.projects.first.title }
@@ -379,6 +382,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
 
     json = JSON.parse(presentation.to_schema_ld)
     assert_equal expected, json
+    check_version(presentation.latest_version, expected)
   end
 
 
@@ -426,8 +430,8 @@ test 'workflow' do
                     [{ '@type' => %w[Project Organization],
                        '@id' => "http://localhost:3000/projects/#{@project.id}",
                        'name' => @project.title }],
-                 'dateCreated' => @current_time.to_s,
-                 'dateModified' => @current_time.to_s,
+                 'dateCreated' => @current_time.iso8601,
+                 'dateModified' => @current_time.iso8601,
                  'encodingFormat' => 'application/x-yaml',
                  'sdPublisher'=> {
                    '@type'=>'Organization',
@@ -482,6 +486,131 @@ test 'workflow' do
                  ] }
 
     json = JSON.parse(workflow.to_schema_ld)
+    assert_equal expected, json
+    check_version(workflow.latest_version, expected)
+  end
+
+  test 'version of dataset' do
+    df = travel_to(@current_time) do
+      df = Factory(:max_data_file, description: 'version 1 description', title: 'version 1 title', contributor: @person, projects: [@project], policy: Factory(:public_policy), doi: '10.10.10.10/test.1')
+      df.add_annotations('keyword', 'tag', User.first)
+      disable_authorization_checks do
+        df.save!
+        df.save_as_new_version
+        df.update_attributes(description: 'version 2 description', title: 'version 2 title')
+        Factory.create(:image_content_blob, asset: df, asset_version: 2)
+        df.latest_version.update_column(:doi, '10.10.10.10/test.2')
+      end
+      df
+    end
+
+    assert df.can_download?
+    refute df.content_blob.show_as_external_link?
+
+    v1_expected = {
+      '@context' => Seek::BioSchema::Serializer::SCHEMA_ORG,
+      '@type' => 'Dataset',
+      '@id' => "http://localhost:3000/data_files/#{df.id}?version=1",
+      'name' => 'version 1 title',
+      'description' => 'version 1 description'.ljust(50,'.'),
+      'keywords' => 'keyword',
+      'url' => "http://localhost:3000/data_files/#{df.id}?version=1",
+      'creator' => [
+        { '@type' => 'Person',
+          '@id' => "##{ROCrate::Entity.format_id('Blogs')}",
+          'name' => 'Blogs' },
+        { '@type' => 'Person',
+          '@id' => "##{ROCrate::Entity.format_id('Joe')}",
+          'name' => 'Joe' }
+      ],
+      'producer' => [{
+                       '@type' => %w[Project Organization],
+                       '@id' => "http://localhost:3000/projects/#{@project.id}",
+                       'name' => @project.title
+                     }],
+      'sdPublisher'=> {
+        '@type'=>'Organization',
+        '@id'=>'http://localhost:3000',
+        'name'=>'SysMO-DB',
+        'url'=>'http://localhost:3000'
+      },
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,
+      'encodingFormat' => 'application/pdf',
+      #'identifier' => 'https://doi.org/10.10.10.10/test.1', # Should not have a DOI, since it was defined on the parent resource
+      'subjectOf' => [
+        { '@type' => 'Event',
+          '@id' => "http://localhost:3000/events/#{df.events.first.id}",
+          'name' => df.events.first.title }
+      ],
+      'distribution' => {
+        '@type' => 'DataDownload',
+        'contentSize' => '8.62 KB',
+        'contentUrl' => "http://localhost:3000/data_files/#{df.id}/content_blobs/#{df.find_version(1).content_blob.id}/download",
+        'encodingFormat' => 'application/pdf',
+        'name' => 'a_pdf_file.pdf'
+      }
+    }
+
+    v2_expected = {
+      '@context' => Seek::BioSchema::Serializer::SCHEMA_ORG,
+      '@type' => 'Dataset',
+      '@id' => "http://localhost:3000/data_files/#{df.id}?version=2",
+      'name' => 'version 2 title',
+      'description' => 'version 2 description'.ljust(50,'.'),
+      'keywords' => 'keyword',
+      'url' => "http://localhost:3000/data_files/#{df.id}?version=2",
+      'creator' => [
+        { '@type' => 'Person',
+          '@id' => "##{ROCrate::Entity.format_id('Blogs')}",
+          'name' => 'Blogs' },
+        { '@type' => 'Person',
+          '@id' => "##{ROCrate::Entity.format_id('Joe')}",
+          'name' => 'Joe' }
+      ],
+      'producer' => [{
+                       '@type' => %w[Project Organization],
+                       '@id' => "http://localhost:3000/projects/#{@project.id}",
+                       'name' => @project.title
+                     }],
+      'sdPublisher'=> {
+        '@type'=>'Organization',
+        '@id'=>'http://localhost:3000',
+        'name'=>'SysMO-DB',
+        'url'=>'http://localhost:3000'
+      },
+      'dateCreated' => @current_time.iso8601,
+      'dateModified' => @current_time.iso8601,
+      'encodingFormat' => 'image/png',
+      'identifier' => 'https://doi.org/10.10.10.10/test.2',  # This DOI was added to the version itself
+      'isBasedOn' => "http://localhost:3000/data_files/#{df.id}?version=1",
+      'subjectOf' => [
+        { '@type' => 'Event',
+          '@id' => "http://localhost:3000/events/#{df.events.first.id}",
+          'name' => df.events.first.title }
+      ],
+      'distribution' => {
+        '@type' => 'DataDownload',
+        'contentSize' => '2.66 KB',
+        'contentUrl' => "http://localhost:3000/data_files/#{df.id}/content_blobs/#{df.find_version(2).content_blob.id}/download",
+        'encodingFormat' => 'image/png',
+        'name' => 'image_file.png'
+      }
+    }
+
+    json = JSON.parse(df.find_version(1).to_schema_ld)
+    assert_equal v1_expected, json
+    json = JSON.parse(df.find_version(2).to_schema_ld)
+    assert_equal v2_expected, json
+  end
+
+  private
+
+  def check_version(version, expected)
+    json = JSON.parse(version.to_schema_ld)
+    expected['@id'] += "?version=#{version.version}"
+    expected['url'] += "?version=#{version.version}" if expected['url'].include?(Seek::Config.site_base_host)
+    expected.delete('identifier') unless version.respond_to?(:doi) && version.doi.present?
     assert_equal expected, json
   end
 end

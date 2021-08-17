@@ -15,7 +15,8 @@ namespace :seek do
     remove_old_project_join_logs
     db:seed:workflow_classes
     fix_negative_programme_role_mask
-    db:seed:sample_attribute_types
+    db:seed:007_sample_attribute_types
+    db:seed:008_miappe_custom_metadata
     delete_users_with_invalid_person
     delete_specimen_activity_logs
     update_session_store
@@ -192,7 +193,7 @@ namespace :seek do
   end
 
   task(update_session_store: :environment) do
-    puts '... Updating session store'
+    puts '... Updating session store (this can take some time so please be patient)'
     Rake::Task['db:sessions:upgrade'].invoke
   end
 

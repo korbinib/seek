@@ -27,6 +27,15 @@ Factory.define(:nextflow_workflow_class, class: WorkflowClass) do |f|
   f.url 'https://www.nextflow.io/'
 end
 
+Factory.define(:knime_workflow_class, class: WorkflowClass) do |f|
+  f.title 'KNIME'
+  f.key 'knime'
+  f.extractor 'KNIME'
+  f.description 'KNIME'
+  f.identifier 'https://www.knime.com/'
+  f.url 'https://www.knime.com/'
+end
+
 Factory.define(:unextractable_workflow_class, class: WorkflowClass) do |f|
   f.title 'Mystery'
   f.key 'Mystery'
@@ -168,4 +177,49 @@ end
 Factory.define(:spaces_ro_crate_workflow, parent: :workflow) do |f|
   f.association :content_blob, factory: :spaces_ro_crate
   f.workflow_class { WorkflowClass.find_by_title('Jupyter Notebook') || Factory(:jupyter_workflow_class) }
+end
+
+Factory.define(:remote_git_workflow, class: Workflow) do |f|
+  f.title 'Concat two files'
+  f.with_project_contributor
+  f.workflow_class { WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class) }
+  f.git_version_attributes {
+    repo = Factory(:remote_repository)
+    { git_repository_id: repo.id,
+      ref: 'refs/heads/main',
+      commit: 'b6312caabe582d156dd351fab98ce78356c4b74c',
+      main_workflow_path: 'concat_two_files.ga',
+      diagram_path: 'diagram.png',
+    }
+  }
+end
+
+Factory.define(:annotationless_local_git_workflow, class: Workflow) do |f|
+  f.title 'Concat two files'
+  f.with_project_contributor
+  f.workflow_class { WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class) }
+  f.git_version_attributes do
+    repo = Factory(:unlinked_local_repository)
+    { git_repository_id: repo.id,
+      ref: 'refs/heads/master',
+      commit: '8eaac19a9e8bf17c787310422ad77d0dab1bfb33',
+      mutable: true
+    }
+  end
+end
+
+Factory.define(:local_git_workflow, class: Workflow) do |f|
+  f.title 'Concat two files'
+  f.with_project_contributor
+  f.workflow_class { WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class) }
+  f.git_version_attributes do
+    repo = Factory(:unlinked_local_repository)
+    { git_repository_id: repo.id,
+      ref: 'refs/heads/master',
+      commit: '8eaac19a9e8bf17c787310422ad77d0dab1bfb33',
+      main_workflow_path: 'concat_two_files.ga',
+      diagram_path: 'diagram.png',
+      mutable: true
+    }
+  end
 end

@@ -43,19 +43,23 @@ module Seek
               version = initial_git_version
               version.resource_attributes = self.attributes
               version.save
+              self.git_version_attributes = nil
+              version
             end
 
             def save_as_new_git_version(extra_git_version_attributes = {})
-              extra_git_version_attributes.merge!(@git_version_attributes)
+              extra_git_version_attributes.reverse_merge!(@git_version_attributes || {})
               version = self.git_versions.build(extra_git_version_attributes)
               version.resource_attributes = self.attributes
               version.save
+              self.git_version_attributes = nil
+              version
             end
 
             def sync_resource_attributes
               version = latest_git_version
               return unless version&.mutable?
-              version.update_attribute(:resource_attributes, self.attributes)
+              version.sync_resource_attributes
             end
 
             def initial_git_version

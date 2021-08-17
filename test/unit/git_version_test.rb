@@ -157,9 +157,7 @@ class GitVersionTest < ActiveSupport::TestCase
   test 'resolve refs' do
     remote = Factory(:remote_repository)
     workflow = Factory(:workflow, git_version_attributes: { git_repository_id: remote.id })
-    v = # disable_authorization_checks { workflow.git_versions.create!(mutable: false) }
 
-    # assert_equal '068cecdfce022aa98532026957a0c9519402e156', v.commit
     v = disable_authorization_checks { workflow.git_versions.create!(remote: remote.remote, ref: 'refs/remotes/origin/main') }
     assert_equal 'b6312caabe582d156dd351fab98ce78356c4b74c', v.commit
     v = disable_authorization_checks { workflow.git_versions.create!(remote: remote.remote, ref: 'refs/tags/v0.01') }
@@ -167,17 +165,14 @@ class GitVersionTest < ActiveSupport::TestCase
   end
 
   test 'remove file' do
-    workflow = Factory(:workflow)
-    repo = Factory(:local_repository, resource: workflow)
+    workflow = Factory(:local_git_workflow)
+    v = workflow.latest_git_version
 
-    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
     old_commit = v.commit
     old_blob_count = v.blobs.length
     assert v.file_exists?('diagram.png')
 
     v.remove_file('diagram.png')
-
-    v.reload
 
     refute v.file_exists?('diagram.png')
     assert_equal old_blob_count - 1, v.blobs.count
@@ -185,17 +180,14 @@ class GitVersionTest < ActiveSupport::TestCase
   end
 
   test 'rename file' do
-    workflow = Factory(:workflow)
-    repo = Factory(:local_repository, resource: workflow)
+    workflow = Factory(:local_git_workflow)
 
-    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
+    v = workflow.latest_git_version
     old_commit = v.commit
     assert v.file_exists?('diagram.png')
     refute v.file_exists?('images/lookatme.png')
 
     v.move_file('diagram.png', 'images/lookatme.png')
-
-    v.reload
 
     refute v.file_exists?('diagram.png')
     assert v.file_exists?('images/lookatme.png')
@@ -249,5 +241,18 @@ class GitVersionTest < ActiveSupport::TestCase
     assert gv.resource.can_manage?
     assert gv.can_delete?
     assert gv.resource.can_delete?
+  end
+
+  test 'attributes synced for factory' do
+    gv = Factory(:git_version)
+    r = gv.resource
+    keys = r.attributes.keys.map(&:to_sym) - [:id, :created_at, :updated_at, :contributor_id]
+    keys.each do |k|
+      if r[k].nil?
+        assert_nil gv.send(k), "#{k} did not match"
+      else
+        assert_equal r[k], gv.send(k), "#{k} did not match"
+      end
+    end
   end
 end

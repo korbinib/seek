@@ -115,8 +115,7 @@ module WorkflowExtraction
     crate.identifier = ro_crate_identifier
     crate.url = ro_crate_url('ro_crate')
 
-    workflow = is_a_version? ? self.parent : self
-    merge_entities(crate, workflow) if workflow
+    merge_entities(crate, self)
 
     crate['isBasedOn'] = source_link_url if source_link_url && !crate['isBasedOn']
     crate['sdDatePublished'] = Time.now unless crate['sdDatePublished']
@@ -263,5 +262,9 @@ module WorkflowExtraction
     else
       content_blob.filepath("diagram.#{format}")
     end
+  end
+
+  def clear_cached_diagram
+    FileUtils.rm(Dir.glob(cached_diagram_path('*')))
   end
 end

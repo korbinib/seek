@@ -220,6 +220,111 @@ module Ga4gh
           r = JSON.parse(@response.body)
           assert_equal [], r
         end
+
+        test 'should list tool version files for given version' do
+          workflow = Factory(:generated_galaxy_ro_crate_workflow, policy: Factory(:public_policy))
+          disable_authorization_checks do
+            workflow.save_as_new_version
+            Factory(:generated_galaxy_no_diagram_ro_crate, asset: workflow, asset_version: 2)
+          end
+
+          get :files, params: { id: workflow.id, version_id: 1, type: 'GALAXY' }
+
+          assert_response :success
+          r = JSON.parse(@response.body)
+          assert_equal 5, r.length
+          galaxy = r.detect { |f| f['path'] == 'Genomics-1-PreProcessing_without_downloading_from_SRA.ga' }
+          diagram = r.detect { |f| f['path'] == 'Genomics-1-PreProcessing_without_downloading_from_SRA.svg' }
+          assert galaxy
+          assert_equal 'PRIMARY_DESCRIPTOR', galaxy['file_type']
+          assert diagram
+          assert_equal 'OTHER', diagram['file_type']
+
+          get :files, params: { id: workflow.id, version_id: 2, type: 'GALAXY' }
+
+          assert_response :success
+          r = JSON.parse(@response.body)
+          assert_equal 5, r.length
+          galaxy = r.detect { |f| f['path'] == 'Genomics-1-PreProcessing_without_downloading_from_SRA.ga' }
+          orig_diagram = r.detect { |f| f['path'] == 'Genomics-1-PreProcessing_without_downloading_from_SRA.svg' }
+          generated_diagram = r.detect { |f| f['path'] == "workflow-#{workflow.id}-2-diagram.svg" }
+          assert galaxy
+          assert_equal 'PRIMARY_DESCRIPTOR', galaxy['file_type']
+          refute orig_diagram
+          assert generated_diagram
+          assert_equal 'OTHER', generated_diagram['file_type']
+        end
+
+        # Git
+        test 'should list tool version files for correct descriptor on git workflow' do
+          workflow = Factory(:remote_git_workflow, policy: Factory(:public_policy))
+
+          get :files, params: { id: workflow.id, version_id: 1, type: 'GALAXY' }
+
+          assert_response :success
+          r = JSON.parse(@response.body)
+          assert_equal 6, r.length
+          galaxy = r.detect { |f| f['path'] == 'concat_two_files.ga' }
+          diagram = r.detect { |f| f['path'] == 'diagram.png' }
+          assert galaxy
+          assert_equal 'PRIMARY_DESCRIPTOR', galaxy['file_type']
+          assert diagram
+          assert_equal 'OTHER', diagram['file_type']
+        end
+
+        test 'should get main workflow as primary descriptor on git workflow' do
+          workflow = Factory(:remote_git_workflow, policy: Factory(:public_policy))
+
+          get :descriptor, params: { id: workflow.id, version_id: 1, type: 'GALAXY' }
+
+          assert_response :success
+          assert @response.body.include?('a_galaxy_workflow')
+        end
+
+        test 'should get descriptor file via relative path on git workflow' do
+          workflow = Factory(:remote_git_workflow, policy: Factory(:public_policy))
+
+          get :descriptor, params: { id: workflow.id, version_id: 1, type: 'GALAXY', relative_path: 'concat_two_files.ga' }
+
+          assert_response :success
+          assert_equal 'application/json; charset=utf-8', @response.headers['Content-Type']
+          assert @response.body.include?('a_galaxy_workflow')
+        end
+
+        test 'should list tool version files for correct version on git workflow' do
+          workflow = Factory(:remote_git_workflow, policy: Factory(:public_policy))
+          disable_authorization_checks do
+            s = workflow.save_as_new_git_version(
+              ref: 'refs/tags/v0.01',
+              git_repository_id: workflow.git_version.git_repository_id,
+              main_workflow_path: 'concat_two_files.ga'
+            )
+            assert s
+          end
+
+          get :files, params: { id: workflow.id, version_id: 1, type: 'GALAXY' }
+
+          assert_response :success
+          r = JSON.parse(@response.body)
+          assert_equal 6, r.length
+          galaxy = r.detect { |f| f['path'] == 'concat_two_files.ga' }
+          diagram = r.detect { |f| f['path'] == 'diagram.png' }
+          assert galaxy
+          assert_equal 'PRIMARY_DESCRIPTOR', galaxy['file_type']
+          assert diagram
+          assert_equal 'OTHER', diagram['file_type']
+
+          get :files, params: { id: workflow.id, version_id: 2, type: 'GALAXY' }
+
+          assert_response :success
+          r = JSON.parse(@response.body)
+          assert_equal 4, r.length
+          galaxy = r.detect { |f| f['path'] == 'concat_two_files.ga' }
+          diagram = r.detect { |f| f['path'] == 'diagram.png' }
+          assert galaxy
+          assert_equal 'PRIMARY_DESCRIPTOR', galaxy['file_type']
+          refute diagram
+        end
       end
     end
   end
