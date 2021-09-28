@@ -10,8 +10,8 @@ class GitController < ApplicationController
 
   user_content_actions :raw
 
-  rescue_from Seek::Git::ImmutableVersionException, with: :render_immutable_error
-  rescue_from Seek::Git::PathNotFoundException, with: :render_path_not_found_error
+  rescue_from Git::ImmutableVersionException, with: :render_immutable_error
+  rescue_from Git::PathNotFoundException, with: :render_path_not_found_error
 
   def browse
     respond_to do |format|
@@ -118,20 +118,16 @@ class GitController < ApplicationController
     if path_param.blank? || path_param == '/'
       @tree = @git_version.tree
     else
-      @tree = @git_version.object(path_param)
+      @tree = @git_version.get_tree(path_param)
     end
 
-    return if @tree&.is_a?(Rugged::Tree)
-
-    raise Seek::Git::PathNotFoundException.new(path: path_param)
+    raise Git::PathNotFoundException.new(path: path_param) unless @tree
   end
 
   def get_blob
-    @blob = @git_version.object(path_param)
+    @blob = @git_version.get_blob(path_param)
 
-    return if @blob&.is_a?(Rugged::Blob)
-
-    raise Seek::Git::PathNotFoundException.new(path: path_param)
+    raise Git::PathNotFoundException.new(path: path_param) unless @blob
   end
 
   def path_param
