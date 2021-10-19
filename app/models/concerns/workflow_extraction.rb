@@ -82,13 +82,13 @@ module WorkflowExtraction
 
   def populate_ro_crate(crate)
     if is_git_versioned?
-      file = git_version.file_contents(main_workflow_path)
+      file = main_workflow_blob.file_contents
       crate.main_workflow = ROCrate::Workflow.new(crate, StringIO.new(file), main_workflow_path, content_size: file.length)
       if diagram_path && git_version.file_exists?(diagram_path)
-        crate.main_workflow.diagram = ROCrate::WorkflowDiagram.new(crate, StringIO.new(git_version.file_contents(diagram_path)), diagram_path)
+        crate.main_workflow.diagram = ROCrate::WorkflowDiagram.new(crate, StringIO.new(diagram_blob.file_contents), diagram_path)
       end
       if abstract_cwl_path && git_version.file_exists?(abstract_cwl_path)
-        crate.main_workflow.cwl_description = ROCrate::WorkflowDescription.new(crate, StringIO.new(git_version.file_contents(abstract_cwl_path)), abstract_cwl_path)
+        crate.main_workflow.cwl_description = ROCrate::WorkflowDescription.new(crate, StringIO.new(abstract_cwl_blob.file_contents), abstract_cwl_path)
       end
     else
       unless crate.main_workflow
@@ -121,8 +121,8 @@ module WorkflowExtraction
     crate['sdDatePublished'] = Time.now unless crate['sdDatePublished']
     crate['creativeWorkStatus'] = I18n.t("maturity_level.#{maturity_level}") if maturity_level
 
-    # brute force deletion as I cannot track down where it comes from
-    crate.contextual_entities.delete_if { |c| c['@id'] == '#ro-crate-preview.html' }
+    crate.preview.template = WorkflowExtraction::PREVIEW_TEMPLATE
+
     crate
   end
 
@@ -225,6 +225,8 @@ module WorkflowExtraction
 
     define_method("#{type}_path=") do |path|
       exist = git_version.send("#{type}_annotation")
+      instance_variable_set(:"@#{s_type}_path_changed", !exist || (exist.path != path))
+
       if path.blank?
         if exist
           exist.destroy
@@ -234,12 +236,16 @@ module WorkflowExtraction
       end
 
       if exist
-        instance_variable_set(:"@#{s_type}_path_changed", exist.path != path)
         exist.update_attribute(:path, path)
       else
         git_version.git_annotations.build(key: s_type, path: path)
       end
     end
+
+    define_method("#{s_type}_blob") do
+      git_version.get_blob(git_version.send("#{s_type}_path"))
+    end
+
   end
 
   def refresh_internals

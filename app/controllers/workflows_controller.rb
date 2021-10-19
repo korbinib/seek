@@ -8,7 +8,7 @@ class WorkflowsController < ApplicationController
   before_action :find_display_asset, only: [:show, :download, :diagram, :ro_crate, :edit_paths, :update_paths]
   before_action :login_required, only: [:create, :create_version, :new_version,
                                         :create_from_files, :create_from_ro_crate,
-                                        :create_metadata, :provide_metadata]
+                                        :create_metadata, :provide_metadata, :create_from_git, :create_version_from_git]
   before_action :find_or_initialize_workflow, only: [:create_from_files, :create_from_ro_crate]
 
   include Seek::Publishing::PublishingCommon
@@ -30,10 +30,10 @@ class WorkflowsController < ApplicationController
       @git_repository.queue_fetch
 
       respond_to do |format|
-        format.html { redirect_to select_ref_git_repository_path(@git_repository, resource_type: :workflow, resource_id: @workflow.id) }
+        format.html
       end
     else
-      @git_version = @workflow.latest_git_version.next_version(mutable: true, name: 'development')
+      @git_version = @workflow.latest_git_version.next_version(mutable: true)
       if @git_version.save
         flash[:notice] = "New development version created."
       else
@@ -98,7 +98,6 @@ class WorkflowsController < ApplicationController
   # Takes a single RO-Crate zip file
   def create_from_ro_crate
     @crate_extractor = WorkflowCrateExtractor.new(ro_crate_extractor_params)
-    @crate_extractor.workflow_class = @workflow.workflow_class
     @workflow = @crate_extractor.build
 
     respond_to do |format|
@@ -112,12 +111,12 @@ class WorkflowsController < ApplicationController
 
   # Creates an RO-Crate zip file from several files
   def create_from_files
-    crate_builder = WorkflowCrateBuilder.new(ro_crate_params)
-    crate_builder.workflow_class = @workflow.workflow_class
-    @workflow = crate_builder.build
+    @crate_builder = WorkflowRepositoryBuilder.new(ro_crate_params)
+    @crate_builder.workflow_class = @workflow.workflow_class
+    @workflow = @crate_builder.build
 
     respond_to do |format|
-      if crate_builder.valid?
+      if @crate_builder.valid?
         format.html { render :provide_metadata }
       else
         format.html { render action: :new, status: :unprocessable_entity }
@@ -127,7 +126,15 @@ class WorkflowsController < ApplicationController
 
   # Takes a remote Git repository and target ref
   def create_from_git
-    wizard = GitWorkflowWizard.new(params: workflow_params, id: params[:resource_id])
+    wizard = GitWorkflowWizard.new(params: workflow_params)
+    @workflow = wizard.run
+    respond_to do |format|
+      format.html { render wizard.next_step }
+    end
+  end
+
+  def create_version_from_git
+    wizard = GitWorkflowWizard.new(params: workflow_params, workflow: @workflow)
     @workflow = wizard.run
     respond_to do |format|
       format.html { render wizard.next_step }
@@ -254,7 +261,7 @@ class WorkflowsController < ApplicationController
 
   def update_paths
     respond_to do |format|
-      if @display_workflow.update_attributes(git_version_path_params) && @workflow.update_attributes(workflow_params)
+      if @workflow.update_attributes(workflow_params) && @display_workflow.reload.update_attributes(git_version_path_params)
         if params[:extract_metadata] == '1'
           extractor = @workflow.extractor
           @workflow.provide_metadata(extractor.metadata)
@@ -337,7 +344,7 @@ class WorkflowsController < ApplicationController
                                      { discussion_links_attributes: [:id, :url, :label, :_destroy] },
                                      { git_version_attributes: [:name, :description, :ref, :commit, :root_path,
                                                                 :git_repository_id, :main_workflow_path,
-                                                                :abstract_cwl_path, :diagram_path,
+                                                                :abstract_cwl_path, :diagram_path, :remote,
                                                                 { remote_sources: {} }] })
   end
 

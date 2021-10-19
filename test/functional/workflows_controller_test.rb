@@ -891,6 +891,10 @@ class WorkflowsControllerTest < ActionController::TestCase
     workflow = Factory(:git_version).resource
     login_as(workflow.contributor)
 
+    assert_equal 'Common Workflow Language', workflow.workflow_class.title
+    assert_equal 'Common Workflow Language', workflow.latest_git_version.workflow_class.title
+    assert_nil workflow.main_workflow_path
+    assert_nil workflow.latest_git_version.main_workflow_path
     assert_difference('Git::Annotation.count', 2) do
       patch :update_paths, params: { id: workflow.id,
                                      git_version: { diagram_path: 'diagram.png',
@@ -898,6 +902,11 @@ class WorkflowsControllerTest < ActionController::TestCase
                                      workflow: { workflow_class_id: Factory(:galaxy_workflow_class).id } }
 
       assert_redirected_to workflow_path(workflow)
+      workflow.reload
+      assert_equal 'Galaxy', workflow.workflow_class.title
+      assert_equal 'Galaxy', workflow.latest_git_version.workflow_class.title
+      assert_equal 'concat_two_files.ga', workflow.main_workflow_path
+      assert_equal 'concat_two_files.ga', workflow.latest_git_version.main_workflow_path
     end
   end
 
@@ -993,7 +1002,9 @@ class WorkflowsControllerTest < ActionController::TestCase
       end
     end
 
-    assert_redirected_to select_ref_git_repository_path(workflow.git_version.git_repository, resource_type: 'workflow', resource_id: workflow.id)
+    assert_response :success
+    assert_select '#repo-ref-form'
+    assert_select 'form[action=?]', create_version_from_git_workflow_path(workflow.id)
   end
 
   test 'get new git version page for local git repo' do
@@ -1009,6 +1020,30 @@ class WorkflowsControllerTest < ActionController::TestCase
     end
 
     assert_redirected_to workflow_path(workflow)
+  end
+
+  test 'should list files for git workflow' do
+    workflow = Factory(:local_git_workflow)
+    login_as(workflow.contributor)
+    assert workflow.git_version.mutable?
+
+    get :show, params: { id: workflow.id }
+
+    assert_response :success
+
+    assert_select "#files a.btn[data-target='#git-add-modal']", text: 'Add file', count: 1
+  end
+
+  test 'should disable Add File button if git version is immutable' do
+    workflow = Factory(:remote_git_workflow)
+    login_as(workflow.contributor)
+    refute workflow.git_version.mutable?
+
+    get :show, params: { id: workflow.id }
+
+    assert_response :success
+
+    assert_select "#files a.btn.disabled", text: 'Add file', count: 1
   end
 
   def edit_max_object(workflow)

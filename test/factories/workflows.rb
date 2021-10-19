@@ -202,7 +202,7 @@ Factory.define(:annotationless_local_git_workflow, class: Workflow) do |f|
     repo = Factory(:unlinked_local_repository)
     { git_repository_id: repo.id,
       ref: 'refs/heads/master',
-      commit: '8eaac19a9e8bf17c787310422ad77d0dab1bfb33',
+      commit: '96aee188b2f9c145860f21dc182608fec5084a8a',
       mutable: true
     }
   end
@@ -216,10 +216,25 @@ Factory.define(:local_git_workflow, class: Workflow) do |f|
     repo = Factory(:unlinked_local_repository)
     { git_repository_id: repo.id,
       ref: 'refs/heads/master',
-      commit: '8eaac19a9e8bf17c787310422ad77d0dab1bfb33',
+      commit: '96aee188b2f9c145860f21dc182608fec5084a8a',
       main_workflow_path: 'concat_two_files.ga',
       diagram_path: 'diagram.png',
       mutable: true
+    }
+  end
+end
+
+Factory.define(:ro_crate_git_workflow, class: Workflow) do |f|
+  f.title 'Sort and change case'
+  f.with_project_contributor
+  f.workflow_class { WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class) }
+  f.git_version_attributes do
+    repo = Factory(:remote_workflow_ro_crate_repository)
+    { git_repository_id: repo.id,
+      ref: 'refs/heads/master',
+      commit: 'a321b6e',
+      main_workflow_path: 'sort-and-change-case.ga',
+      mutable: false
     }
   end
 end

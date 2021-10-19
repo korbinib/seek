@@ -26,7 +26,7 @@ module Git
 
     alias_method :parent, :resource # ExplicitVersioning compatibility
 
-    attr_writer :remote
+    attr_accessor :remote
 
     delegate :tag_counts, :scales, :managers, :attributions, :creators, :assets_creators, :is_asset?,
              :authorization_supported?, :defines_own_avatar?, :use_mime_type_for_avatar?, :avatar_key,
@@ -34,9 +34,9 @@ module Git
 
     delegate_auth_to :parent
 
-    def name
-      super || "Version #{version}"
-    end
+    # def name
+    #   super || "Version #{version}"
+    # end
 
     def latest_git_version?
       resource.latest_git_version == self
@@ -161,10 +161,10 @@ module Git
     # Initialize a follow-up version to this one, with the version number bumped.
     def next_version(extra_attributes = {})
       git_version = self.dup
-      git_version.name = nil
       git_version.comment = nil
       git_version.ref = nil
       git_version.version = (version + 1)
+      git_version.name = "Version #{git_version.version}"
       git_version.set_resource_attributes(resource.attributes)
       git_version.assign_attributes(extra_attributes)
       git_version.git_annotations = git_annotations.map(&:dup)
@@ -217,6 +217,24 @@ module Git
       git_sync_ignore_attributes + SYNC_IGNORE_ATTRIBUTES
     end
 
+    def set_default_git_repository
+      if @remote.present?
+        self.git_repository ||= Git::Repository.find_or_create_by(remote: @remote)
+      else
+        self.git_repository ||= (resource.local_git_repository || resource.create_local_git_repository)
+        self.ref = DEFAULT_LOCAL_REF if self.ref.blank?
+      end
+    end
+
+    def immutable_error
+      return nil if mutable?
+      if remote?
+        I18n.t('git.modify_immutable_remote_error')
+      else
+        I18n.t('git.modify_immutable_error')
+      end
+    end
+
     private
 
     def set_version
@@ -225,13 +243,7 @@ module Git
     end
 
     def set_git_info
-      if @remote.present?
-        self.git_repository ||= Git::Repository.find_or_create_by(remote: @remote)
-      else
-        self.git_repository ||= (resource.local_git_repository || resource.create_local_git_repository)
-        self.ref = DEFAULT_LOCAL_REF if self.ref.blank?
-      end
-      self.git_repository ||= @remote.present? ? Git::Repository.find_or_create_by(remote: @remote) : resource.local_git_repository || resource.create_local_git_repository
+      set_default_git_repository
       self.mutable = git_repository&.remote.blank? if self.mutable.nil?
     end
 

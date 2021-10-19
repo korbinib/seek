@@ -31,10 +31,6 @@ module Git
       touch(:last_fetch)
     end
 
-    def fetching?
-      remote_git_fetch_task && !remote_git_fetch_task.completed?
-    end
-
     def remote_refs
       @remote_refs ||= if remote.present?
                          refs = { branches: [], tags: [] }
@@ -43,7 +39,8 @@ module Git
                            next unless branch.remote?
                            # TODO: Fix the default branch check. Does not seem to be a way to do in Rugged.
                            name = branch.name.sub(/\A#{branch.remote_name}\//, '')
-                           h = { name: name, ref: branch.canonical_name, sha: branch.target.oid, default: ['main', 'master', 'develop'].include?(name) }
+                           h = { name: name, ref: branch.canonical_name, sha: branch.target.oid }
+                           h[:default] = true if ['main', 'master', 'develop'].include?(name)
                            refs[:branches] << h
                          end
 
