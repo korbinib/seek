@@ -12,6 +12,8 @@ class GitController < ApplicationController
 
   rescue_from Git::ImmutableVersionException, with: :render_immutable_error
   rescue_from Git::PathNotFoundException, with: :render_path_not_found_error
+  rescue_from Git::InvalidPathException, with: :render_invalid_path_error
+  rescue_from URI::InvalidURIError, with: :render_invalid_url_error
 
   def browse
     respond_to do |format|
@@ -59,12 +61,12 @@ class GitController < ApplicationController
   end
 
   def add_file
-    path = file_params[:path]
-    path = file_params[:data].original_filename if path.blank?
-    @git_version.add_file(path, file_params[:data])
-    @git_version.save!
+    if file_params[:url].present?
+      add_remote_file
+    else
+      add_local_file
+    end
 
-    flash[:notice] = "Uploaded #{file_params[:path]}"
     redirect_to polymorphic_path(@parent_resource, anchor: 'files')
   end
 
@@ -114,6 +116,20 @@ class GitController < ApplicationController
     end
   end
 
+  def render_invalid_path_error(ex)
+    flash[:error] = "Invalid path: #{ex.path}"
+    respond_to do |format|
+      format.html { redirect_to polymorphic_path(@parent_resource, anchor: 'files') }
+    end
+  end
+
+  def render_invalid_url_error(ex)
+    flash[:error] = ex.message
+    respond_to do |format|
+      format.html { redirect_to polymorphic_path(@parent_resource, anchor: 'files') }
+    end
+  end
+
   def get_tree
     if path_param.blank? || path_param == '/'
       @tree = @git_version.tree
@@ -154,7 +170,7 @@ class GitController < ApplicationController
   end
 
   def file_params
-    params.require(:file).permit(:path, :data, :new_path)
+    params.require(:file).permit(:path, :data, :new_path, :url)
   end
 
   def fetch_git_version
@@ -164,6 +180,24 @@ class GitController < ApplicationController
 
   def git_version_params
     params.require(:git_version).permit(:name, :comment)
+  end
+
+  def add_local_file
+    path = file_params[:path]
+    path = file_params[:data].original_filename if path.blank?
+    @git_version.add_file(path, file_params[:data])
+    @git_version.save!
+
+    flash[:notice] = "Uploaded #{file_params[:path]}"
+  end
+
+  def add_remote_file
+    path = file_params[:path]
+    path = file_params[:url].split('/').last if path.blank?
+    @git_version.add_remote_file(path, file_params[:url])
+    @git_version.save!
+
+    flash[:notice] = "Registered #{file_params[:path]}"
   end
 
   # # Rugged does not allow streaming blobs

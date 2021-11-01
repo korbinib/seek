@@ -23,6 +23,7 @@ module Git
     validate :git_repository_linkable
 
     include Git::Operations
+    include Seek::UrlValidation
 
     alias_method :parent, :resource # ExplicitVersioning compatibility
 
@@ -232,6 +233,15 @@ module Git
         I18n.t('git.modify_immutable_remote_error')
       else
         I18n.t('git.modify_immutable_error')
+      end
+    end
+
+    def add_remote_file(path, url, fetch: true, message: nil)
+      raise URI::InvalidURIError, "URL (#{url}) must be a valid, accessible remote URL" unless valid_url?(url)
+
+      add_file(path, StringIO.new(''), message: message).tap do
+        git_annotations.create(key: 'remote_source', path: path, value: url)
+        RemoteGitContentFetchingJob.perform_later(self, path, url) if fetch
       end
     end
 

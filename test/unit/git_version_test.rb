@@ -35,7 +35,6 @@ class GitVersionTest < ActiveSupport::TestCase
     workflow = Factory(:workflow)
     repo = Factory(:blank_repository, resource: workflow)
 
-
     v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
     assert_equal 'This Workflow', v.title
     assert v.mutable?
@@ -271,5 +270,129 @@ class GitVersionTest < ActiveSupport::TestCase
     assert_equal gv.resource_attributes['title'], next_ver.resource_attributes['title']
     assert_equal gv.commit, next_ver.commit
     assert_equal gv.git_repository, next_ver.git_repository
+  end
+
+  test 'can handle unusual paths' do
+    workflow = Factory(:workflow)
+    repo = Factory(:blank_repository, resource: workflow)
+
+    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
+    assert_equal 'This Workflow', v.title
+    assert v.mutable?
+    assert v.commit.blank?
+    assert_empty v.blobs
+
+    assert_raise(Git::InvalidPathException) do
+      v.add_file('///', StringIO.new('blah'))
+    end
+
+    assert_raise(Git::InvalidPathException) do
+      v.add_file('something/', StringIO.new('blah'))
+    end
+
+    assert_nothing_raised do
+      v.add_file('?&&?&&?&&&?', StringIO.new('blah'))
+    end
+
+    assert_nothing_raised do
+      v.add_file('     ', StringIO.new('blah'))
+    end
+
+    assert v.reload.commit.present?
+    refute v.file_exists?('///')
+    refute v.file_exists?('something/')
+    assert v.file_exists?('?&&?&&?&&&?')
+    assert v.file_exists?('     ')
+  end
+
+  test 'valid paths are rejected when committed with invalid paths' do
+    workflow = Factory(:workflow)
+    repo = Factory(:blank_repository, resource: workflow)
+
+    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
+    assert_equal 'This Workflow', v.title
+    assert v.mutable?
+    assert v.commit.blank?
+    assert_empty v.blobs
+
+    assert_raise(Git::InvalidPathException) do
+      v.add_files([['valid_path', StringIO.new('blah')], ['../../../secrets', StringIO.new('blah')]])
+    end
+
+    refute v.file_exists?('valid_path'), 'valid_path should not have been committed as it was bundled with an invalid path.'
+    refute v.file_exists?('../../../secrets')
+    assert v.reload.commit.blank?
+  end
+
+  test 'add remote file' do
+    workflow = Factory(:workflow)
+    repo = Factory(:blank_repository, resource: workflow)
+
+    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
+    assert_equal 'This Workflow', v.title
+    assert v.mutable?
+    assert v.commit.blank?
+    assert_empty v.blobs
+    assert_empty v.remote_sources
+
+    assert_difference('Git::Annotation.count', 1) do
+      assert_enqueued_jobs(1, only: RemoteGitContentFetchingJob) do
+        v.add_remote_file('blah.txt', 'http://internet.internet/file')
+      end
+    end
+
+    assert v.reload.commit.present?
+    assert_equal 'http://internet.internet/file', v.remote_sources['blah.txt']
+    assert v.file_exists?('blah.txt')
+    assert_equal '', v.file_contents('blah.txt')
+    assert_not_empty v.blobs
+  end
+
+  test 'add remote file without fetch job' do
+    workflow = Factory(:workflow)
+    repo = Factory(:blank_repository, resource: workflow)
+
+    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
+    assert_equal 'This Workflow', v.title
+    assert v.mutable?
+    assert v.commit.blank?
+    assert_empty v.blobs
+    assert_empty v.remote_sources
+
+    assert_difference('Git::Annotation.count', 1) do
+      assert_no_enqueued_jobs(only: RemoteGitContentFetchingJob) do
+        v.add_remote_file('blah.txt', 'http://internet.internet/file', fetch: false)
+      end
+    end
+
+    assert v.reload.commit.present?
+    assert_equal 'http://internet.internet/file', v.remote_sources['blah.txt']
+    assert v.file_exists?('blah.txt')
+    assert_equal '', v.file_contents('blah.txt')
+    assert_not_empty v.blobs
+  end
+
+  test 'do not add remote file with inaccessible URL' do
+    workflow = Factory(:workflow)
+    repo = Factory(:blank_repository, resource: workflow)
+
+    v = disable_authorization_checks { workflow.git_versions.create!(mutable: true) }
+    assert_equal 'This Workflow', v.title
+    assert v.mutable?
+    assert v.commit.blank?
+    assert_empty v.blobs
+    assert_empty v.remote_sources
+
+    assert_raise(URI::InvalidURIError) do
+      assert_difference('Git::Annotation.count', 0) do
+        assert_enqueued_jobs(0, only: RemoteGitContentFetchingJob) do
+          v.add_remote_file('blah.txt', '/mypc/files/something.txt')
+        end
+      end
+    end
+
+    refute v.reload.commit.present?
+    assert_empty v.blobs
+    assert_empty v.remote_sources
   end
 end
