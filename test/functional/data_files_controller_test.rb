@@ -1273,6 +1273,21 @@ class DataFilesControllerTest < ActionController::TestCase
     assert flash[:error]
   end
 
+  test 'gracefully handles explore with invalid mime type' do
+    df = Factory(:csv_spreadsheet_datafile, policy: Factory(:public_policy))
+    df.content_blob.update_column(:content_type, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+
+    # incorrectly thinks it's excel
+    assert df.content_blob.is_excel?
+
+    # check mime type cannot be resolved, otherwise it will autofix without error
+    assert_nil df.content_blob.send(:mime_magic_content_type)
+
+    get :explore, params: { id: df, version: 1 }
+    assert_redirected_to data_file_path(df, version: 1)
+    assert flash[:error]
+  end
+
   test 'correctly displays links in spreadsheet explorer' do
     df = Factory(:data_file,
                  policy: Factory(:public_policy),
@@ -1548,7 +1563,7 @@ class DataFilesControllerTest < ActionController::TestCase
     data_file.save
     get :show, params: { id: data_file }
 
-    assert_select 'li.author-list-item', text: 'another creator', count: 1
+    assert_select '#author-box .additional-credit', text: 'another creator', count: 1
   end
 
   # TODO: Permission UI testing - Replace this with a Jasmine test
@@ -3627,7 +3642,7 @@ class DataFilesControllerTest < ActionController::TestCase
     # should be a temporary sharing link
     assert_select 'div#temporary_links', count:1
 
-    assert_select 'div#author_form', count:1
+    assert_select 'div#author-form', count:1
   end
 
   test 'cannot access manage page with edit rights' do

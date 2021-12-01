@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_08_10_211320) do
+ActiveRecord::Schema.define(version: 2021_11_11_133408) do
 
   create_table "activity_logs", id: :integer,  force: :cascade do |t|
     t.string "action"
@@ -110,6 +110,13 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
+  create_table "application_status",  force: :cascade do |t|
+    t.integer "running_jobs"
+    t.boolean "soffice_running"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "assay_assets", id: :integer,  force: :cascade do |t|
     t.integer "assay_id"
     t.integer "asset_id"
@@ -183,6 +190,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.text "other_creators"
     t.string "deleted_contributor"
     t.integer "sample_type_id"
+    t.integer "position"
     t.index ["sample_type_id"], name: "index_assays_on_sample_type_id"
   end
 
@@ -225,6 +233,11 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.string "asset_type"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer "pos", default: 0
+    t.string "family_name"
+    t.string "given_name"
+    t.string "orcid"
+    t.text "affiliation"
     t.index ["asset_id", "asset_type"], name: "index_assets_creators_on_asset_id_and_asset_type"
   end
 
@@ -373,6 +386,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.string "title"
     t.bigint "sample_controlled_vocab_id"
     t.text "description"
+    t.string "label"
     t.index ["custom_metadata_type_id"], name: "index_custom_metadata_attributes_on_custom_metadata_type_id"
     t.index ["sample_attribute_type_id"], name: "index_custom_metadata_attributes_on_sample_attribute_type_id"
     t.index ["sample_controlled_vocab_id"], name: "index_custom_metadata_attributes_on_sample_controlled_vocab_id"
@@ -815,6 +829,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.integer "contributor_id"
     t.text "other_creators"
     t.string "deleted_contributor"
+    t.integer "position"
   end
 
   create_table "investigations_projects", id: false,  force: :cascade do |t|
@@ -1480,7 +1495,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.datetime "updated_at"
   end
 
-  create_table "repository_standards",  force: :cascade do |t|
+  create_table "repository_standards", id: :integer,  force: :cascade do |t|
     t.string "title"
     t.string "url"
     t.string "group_tag"
@@ -1563,6 +1578,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.boolean "required"
     t.string "short_name"
     t.integer "repository_standard_id"
+    t.string "key"
   end
 
   create_table "sample_resource_links", id: :integer,  force: :cascade do |t|
@@ -1811,7 +1827,6 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.integer "investigation_id"
     t.text "experimentalists"
     t.datetime "begin_date"
-    t.integer "person_responsible_id"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string "first_letter", limit: 1
@@ -1820,6 +1835,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.integer "contributor_id"
     t.text "other_creators"
     t.string "deleted_contributor"
+    t.integer "position"
   end
 
   create_table "study_auth_lookup",  force: :cascade do |t|
@@ -1961,7 +1977,7 @@ ActiveRecord::Schema.define(version: 2021_08_10_211320) do
     t.index ["user_id", "can_view"], name: "index_w_auth_lookup_on_user_id_and_can_view"
   end
 
-  create_table "workflow_classes",  force: :cascade do |t|
+  create_table "workflow_classes", id: :integer,  force: :cascade do |t|
     t.string "title"
     t.text "description"
     t.string "key"

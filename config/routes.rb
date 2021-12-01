@@ -139,6 +139,7 @@ SEEK::Application.routes.draw do
       get :registration_form
       get :edit_tag      
       post :update_home_settings
+      post :delete_carousel_form
       post :restart_server
       post :restart_delayed_job
       post :update_admins
@@ -316,6 +317,7 @@ SEEK::Application.routes.draw do
       post :update_members
       post :request_membership
       get :overview
+      get :order_investigations
       get :administer_join_request
       post :respond_join_request
       get :guided_join
@@ -395,6 +397,9 @@ SEEK::Application.routes.draw do
     resources :people, :programmes, :projects, :assays, :studies, :models, :sops, :workflows, :nodes, :data_files, :publications, :documents, only: [:index]
     member do
       get :export_isatab_json
+      get :manage
+      get :order_studies
+      patch :manage_update
     end
   end
 
@@ -426,6 +431,7 @@ SEEK::Application.routes.draw do
       get :published
       get :isa_children
       get :manage
+      get :order_assays
       patch :manage_update
     end
     resources :people, :programmes, :projects, :assays, :investigations, :models, :sops, :workflows, :nodes, :data_files, :publications, :documents, only: [:index]
@@ -646,6 +652,9 @@ SEEK::Application.routes.draw do
     collection do
       get :attribute_form
       get :filter
+      post :batch_create
+      put :batch_update
+      delete :batch_delete
     end
     resources :people, :programmes, :projects, :assays, :studies, :investigations, :data_files, :publications, :samples,
               :strains, :organisms, :collections, only: [:index]
@@ -699,6 +708,18 @@ SEEK::Application.routes.draw do
         post :select
       end
     end
+  end
+
+  resources :creators, only: [] do
+    collection do
+      get :registered
+      get :unregistered
+    end
+  end
+
+   ### SINGLE PAGE
+
+  resources :single_pages do
   end
 
   ### ASSAY AND TECHNOLOGY TYPES ###

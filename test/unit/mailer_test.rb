@@ -122,7 +122,7 @@ class MailerTest < ActionMailer::TestCase
     item = Factory(:data_file, projects: gatekeeper.projects, title: 'Picture', contributor:person)
     items_and_comments = [{ item: item, comment: nil }]
     requester = Factory(:person, first_name: 'Aaron', last_name: 'Spiggle')
-    @expected.subject = 'A Sysmo SEEK gatekeeper approved your publishing requests.'
+    @expected.subject = "A Sysmo SEEK #{I18n.t('asset_gatekeeper').downcase} approved your publishing requests."
 
     @expected.to = requester.email_with_name
     @expected.from = 'no-reply@sysmo-db.org'
@@ -132,6 +132,7 @@ class MailerTest < ActionMailer::TestCase
     expected_text = encode_mail(@expected)
     expected_text.gsub!('-person_id-', gatekeeper.id.to_s)
     expected_text.gsub!('-df_id-', item.id.to_s)
+    expected_text.gsub!('-asset_gatekeeper-', I18n.t('asset_gatekeeper').downcase)
 
     assert_equal expected_text, encode_mail(Mailer.gatekeeper_approval_feedback(requester, gatekeeper, items_and_comments))
   end
@@ -143,7 +144,7 @@ class MailerTest < ActionMailer::TestCase
     items_and_comments = [{ item: item, comment: 'not ready' }]
 
     requester = Factory(:person, first_name: 'Aaron', last_name: 'Spiggle')
-    @expected.subject = 'A Sysmo SEEK gatekeeper rejected your publishing requests.'
+    @expected.subject = "A Sysmo SEEK #{I18n.t('asset_gatekeeper').downcase} rejected your publishing requests."
 
     @expected.to = requester.email_with_name
     @expected.from = 'no-reply@sysmo-db.org'
@@ -154,6 +155,7 @@ class MailerTest < ActionMailer::TestCase
     expected_text = encode_mail(@expected)
     expected_text.gsub!('-person_id-', gatekeeper.id.to_s)
     expected_text.gsub!('-df_id-', item.id.to_s)
+    expected_text.gsub!('-asset_gatekeeper-', I18n.t('asset_gatekeeper').downcase)
 
     assert_equal expected_text, encode_mail(Mailer.gatekeeper_reject_feedback(requester, gatekeeper, items_and_comments))
   end
@@ -306,7 +308,7 @@ class MailerTest < ActionMailer::TestCase
         institution = Institution.new({title:'My lovely institution', web_page:'http://inst.org', country:'DE'})
         comments = 'some comments'
         person = Factory(:person)
-        log = MessageLog.log_project_membership_request(person, project, institution, comments)
+        log = ProjectMembershipMessageLog.log_request(sender:person, project:project, institution:institution, comments:comments)
         email = Mailer.request_join_project(person.user, project, institution.to_json,comments, log)
         refute_nil email
         refute_nil email.body
@@ -321,7 +323,7 @@ class MailerTest < ActionMailer::TestCase
         institution = Factory(:institution)
         comments = 'some comments'
         person = Factory(:person)
-        log = MessageLog.log_project_membership_request(person, project, institution, comments)
+        log = ProjectMembershipMessageLog.log_request(sender:person, project:project, institution:institution, comments:comments)
         email = Mailer.request_join_project(person.user, project, institution.to_json,comments, log)
         refute_nil email
         refute_nil email.body
@@ -339,7 +341,7 @@ class MailerTest < ActionMailer::TestCase
         project = Project.new(title:'My lovely project')
         institution = Factory(:institution)
         sender = Factory(:person)
-        log = MessageLog.log_project_creation_request(sender,programme,project,institution)
+        log = ProjectCreationMessageLog.log_request(sender:sender, programme:programme, project:project, institution:institution)
         email = Mailer.request_create_project_for_programme(sender.user, programme, project.to_json, institution.to_json,log)
         refute_nil email
         refute_nil email.body
@@ -359,7 +361,7 @@ class MailerTest < ActionMailer::TestCase
           project = Project.new(title:'My lovely project')
           institution = Factory(:institution)
           sender = Factory(:person)
-          log = MessageLog.log_project_creation_request(sender,programme,project,institution)
+          log = ProjectCreationMessageLog.log_request(sender:sender, programme:programme, project:project, institution: institution)
           email = Mailer.request_create_project_for_programme_admins(sender.user, programme, project.to_json, institution.to_json,log)
           refute_nil email
           refute_nil email.body
@@ -375,7 +377,7 @@ class MailerTest < ActionMailer::TestCase
         project = Project.new(title:'My lovely project')
         institution = Factory(:institution)
         sender = Factory(:person)
-        log = MessageLog.log_project_creation_request(sender,nil,project,institution)
+        log = ProjectCreationMessageLog.log_request(sender:sender, project:project, institution:institution)
         email = Mailer.request_create_project(sender.user, project.to_json, institution.to_json,log)
         refute_nil email
         refute_nil email.body
@@ -390,7 +392,7 @@ class MailerTest < ActionMailer::TestCase
         project = Project.new(title:'My lovely project')
         programme = Programme.new(title:'My lovely programme')
         sender = Factory(:person)
-        log = MessageLog.log_project_creation_request(sender,programme,project,institution)
+        log = ProjectCreationMessageLog.log_request(sender:sender, programme:programme, project:project, institution:institution)
         email = Mailer.request_create_project_and_programme(sender.user, programme.to_json, project.to_json, institution.to_json,log)
         refute_nil email
         refute_nil email.body        

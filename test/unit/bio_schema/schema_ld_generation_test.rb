@@ -24,9 +24,9 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       'keywords' => 'a, b, c, d',
       'provider' => {
         '@type' => 'Organization',
-        '@id' => 'http://www.sysmo-db.org',
         'name' => 'SysMO-DB',
-        'url' => 'http://www.sysmo-db.org'
+        'url' => 'http://www.sysmo-db.org',
+        '@id' => 'http://www.sysmo-db.org'
       },
       'dateCreated' => @current_time.iso8601,
       'dateModified' => @current_time.iso8601
@@ -74,7 +74,6 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
     }
 
     json = JSON.parse(@person.to_schema_ld)
-    fine_json_comparison expected, json
     assert_equal expected, json
   end
 
@@ -100,7 +99,16 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       'keywords' => 'keyword',
       'version' => 1,
       'url' => "http://localhost:3000/data_files/#{df.id}",
-      'creator' => [{ '@type' => 'Person', '@id' => "##{ROCrate::Entity.format_id('Blogs')}", 'name' => 'Blogs' }, { '@type' => 'Person', '@id' => "##{ROCrate::Entity.format_id('Joe')}", 'name' => 'Joe' }],
+      'creator' => [{
+                      '@type' => 'Person',
+                      '@id' => "##{ROCrate::Entity.format_id('Blogs')}",
+                      'name' => 'Blogs'
+                    },
+                    {
+                      '@type' => 'Person',
+                      '@id' => "##{ROCrate::Entity.format_id('Joe')}",
+                      'name' => 'Joe'
+                    }],
       'producer' => [{
         '@type' => %w[Project Organization],
         '@id' => "http://localhost:3000/projects/#{@project.id}",
@@ -135,7 +143,6 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       df = Factory(:max_data_file, contributor: @person, projects: [@project], policy: Factory(:public_policy),
                                    doi: '10.10.10.10/test.1')
       df.add_annotations('keyword', 'tag', User.first)
-      df.content_blob = nil
       disable_authorization_checks do
         df.content_blob = nil
         df.save!
@@ -169,8 +176,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
       'subjectOf' => [
         { '@type' => 'Event',
           '@id' => "http://localhost:3000/events/#{df.events.first.id}",
-          'name' => df.events.first.title }
-      ]
+          'name' => df.events.first.title }]
     }
 
     json = JSON.parse(df.to_schema_ld)
@@ -421,9 +427,11 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
                          title: 'This workflow',
                          description: 'This is a test workflow for bioschema generation',
                          creators: [@person, creator2],
-                         other_creators: 'Fred Bloggs, Steve Smith',
                          contributor: @person,
                          license: 'APSL-2.0')
+
+      workflow.assets_creators.create!(given_name: 'Fred', family_name: 'Bloggs')
+      workflow.assets_creators.create!(given_name: 'Steve', family_name: 'Smith', orcid: 'https://orcid.org/0000-0002-1694-233X')
 
       workflow.internals = workflow.extractor.metadata[:internals]
 
@@ -454,7 +462,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
                        '@id' => "##{ROCrate::Entity.format_id('Fred Bloggs')}",
                        'name' => 'Fred Bloggs' },
                      { '@type' => 'Person',
-                       '@id' => "##{ROCrate::Entity.format_id('Steve Smith')}",
+                       '@id' => "https://orcid.org/0000-0002-1694-233X",
                        'name' => 'Steve Smith' }],
                  'producer' =>
                     [{ '@type' => %w[Project Organization],
@@ -466,7 +474,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
                  'sdPublisher' =>
                    {
                      '@type' => 'Organization',
-		     '@id' => Seek::Config.dm_project_link,	
+                     '@id' => Seek::Config.dm_project_link,
                      'name' => Seek::Config.dm_project_name,
                      'url' => Seek::Config.dm_project_link },
                  'version' => 1,
@@ -477,9 +485,9 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
                    'alternateName'=>'CWL',
                    'identifier'=> {
                      '@id'=>'https://w3id.org/cwl/v1.0/'},
-                      'url'=>{'@id'=>'https://www.commonwl.org/'}},
-                 'isPartOf' => [],
-                 'input' => [
+                   'url'=>{'@id'=>'https://www.commonwl.org/'}},
+                   'isPartOf' => [],
+		    'input' => [
                    { '@type' => 'FormalParameter',
                      '@id' => "\##{expected_wf_prefix}-inputs-\#main/input.cofsfile",
                      'dct:conformsTo' => Seek::BioSchema::ResourceDecorators::Workflow::FORMALPARAMETER_PROFILE,
@@ -545,6 +553,7 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
                  ] }
 
     json = JSON.parse(workflow.to_schema_ld)
+    fine_json_comparison expected, json
     assert_equal expected, json
     check_version(workflow.latest_version, expected)
   end
@@ -820,4 +829,5 @@ class SchemaLdGenerationTest < ActiveSupport::TestCase
     expected.each { |k, v| assert_equal v, json[k], "mismatch with key #{k}" }
     json.each { |k, v| assert_equal v, expected[k], "mismatch with key #{k}" }
   end
+
 end

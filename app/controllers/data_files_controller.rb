@@ -25,6 +25,7 @@ class DataFilesController < ApplicationController
 
   before_action :login_required, only: [:create, :create_content_blob, :create_metadata, :rightfield_extraction_ajax, :provide_metadata]
 
+  
   # has to come after the other filters
   include Seek::Publishing::PublishingCommon
 
@@ -185,12 +186,22 @@ class DataFilesController < ApplicationController
       end
     end
     if @display_data_file.contains_extractable_spreadsheet?
-      respond_to do |format|
-        format.html
+      begin
+        @workbook = Rails.cache.fetch("spreadsheet-workbook-#{@display_data_file.content_blob.cache_key}") do
+          @display_data_file.spreadsheet
+        end
+        respond_to do |format|
+          format.html
+        end
+      rescue SysMODB::SpreadsheetExtractionException
+        respond_to do |format|
+          flash[:error] = "There was an error when processing the #{t('data_file')} to explore, perhaps it isn't a valid Excel spreadsheet"
+          format.html { redirect_to data_file_path(@data_file, version: @display_data_file.version) }
+        end
       end
     else
       respond_to do |format|
-        flash[:error] = 'Unable to view contents of this data file'
+        flash[:error] = "Unable to explore contents of this #{t('data_file')}"
         format.html { redirect_to data_file_path(@data_file, version: @display_data_file.version) }
       end
     end
@@ -323,9 +334,11 @@ class DataFilesController < ApplicationController
     respond_to do |format|
       if handle_upload_data && @data_file.content_blob.save
         session[:uploaded_content_blob_id] = @data_file.content_blob.id
+        format.js
         format.html {}
       else
         session.delete(:uploaded_content_blob_id)
+        format.js
         format.html { render action: :new }
       end
     end
@@ -396,6 +409,7 @@ class DataFilesController < ApplicationController
     @data_file.assay_assets.build(assay_id: @assay.id) if @assay.persisted?
 
     respond_to do |format|
+      format.js
       format.html
     end
   end
@@ -517,9 +531,9 @@ class DataFilesController < ApplicationController
 
   def data_file_params
     params.require(:data_file).permit(:title, :description, :simulation_data, { project_ids: [] },
-                                      :license, :other_creators,{ event_ids: [] },
+                                      :license, *creator_related_params, { event_ids: [] },
                                       { special_auth_codes_attributes: [:code, :expiration_date, :id, :_destroy] },
-                                      { creator_ids: [] }, { assay_assets_attributes: [:assay_id, :relationship_type_id] },
+                                      { assay_assets_attributes: [:assay_id, :relationship_type_id] },
                                       { scales: [] }, { publication_ids: [] },
                                       discussion_links_attributes:[:id, :url, :label, :_destroy])
   end
