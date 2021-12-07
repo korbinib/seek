@@ -575,6 +575,13 @@ ActiveRecord::Schema.define(version: 2021_11_11_133408) do
     t.index ["project_id"], name: "index_documents_projects_on_project_id"
   end
 
+  create_table "documents_studyhub_resources",  force: :cascade do |t|
+    t.bigint "document_id"
+    t.bigint "studyhub_resource_id"
+    t.index ["document_id"], name: "index_documents_studyhub_resources_on_document_id"
+    t.index ["studyhub_resource_id"], name: "index_documents_studyhub_resources_on_studyhub_resource_id"
+  end
+
   create_table "event_auth_lookup",  force: :cascade do |t|
     t.integer "user_id"
     t.integer "asset_id"
@@ -1388,6 +1395,13 @@ ActiveRecord::Schema.define(version: 2021_11_11_133408) do
     t.integer "strain_id"
   end
 
+  create_table "projects_studyhub_resources",  force: :cascade do |t|
+    t.bigint "studyhub_resource_id"
+    t.bigint "project_id"
+    t.index ["project_id"], name: "index_projects_studyhub_resources_on_project_id"
+    t.index ["studyhub_resource_id"], name: "index_projects_studyhub_resources_on_studyhub_resource_id"
+  end
+
   create_table "projects_workflow_versions", id: false,  force: :cascade do |t|
     t.integer "project_id"
     t.integer "version_id"
@@ -1495,7 +1509,7 @@ ActiveRecord::Schema.define(version: 2021_11_11_133408) do
     t.datetime "updated_at"
   end
 
-  create_table "repository_standards", id: :integer,  force: :cascade do |t|
+  create_table "repository_standards",  force: :cascade do |t|
     t.string "title"
     t.string "url"
     t.string "group_tag"
@@ -1850,6 +1864,64 @@ ActiveRecord::Schema.define(version: 2021_11_11_133408) do
     t.index ["user_id", "can_view"], name: "index_study_auth_lookup_on_user_id_and_can_view"
   end
 
+  create_table "studyhub_resource_auth_lookup",  force: :cascade do |t|
+    t.integer "user_id"
+    t.integer "asset_id"
+    t.boolean "can_view", default: false
+    t.boolean "can_manage", default: false
+    t.boolean "can_edit", default: false
+    t.boolean "can_download", default: false
+    t.boolean "can_delete", default: false
+    t.index ["user_id", "asset_id", "can_view"], name: "index_studyhub_resource_user_id_asset_id_can_view"
+    t.index ["user_id", "can_view"], name: "index_studyhub_resource_auth_lookup_on_user_id_and_can_view"
+  end
+
+  create_table "studyhub_resource_relationships",  force: :cascade do |t|
+    t.integer "parent_id"
+    t.integer "child_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["child_id"], name: "index_studyhub_resource_relationships_on_child_id"
+    t.index ["parent_id", "child_id"], name: "index_studyhub_resource_parent_id_child_id", unique: true
+    t.index ["parent_id"], name: "index_studyhub_resource_relationships_on_parent_id"
+  end
+
+  create_table "studyhub_resource_types",  force: :cascade do |t|
+    t.string "title"
+    t.string "description"
+    t.string "key"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "studyhub_resources",  force: :cascade do |t|
+    t.json "resource_json"
+    t.string "nfdi_person_in_charge"
+    t.string "contact_stage"
+    t.string "data_source"
+    t.string "comment"
+    t.string "exclusion_mica_reason"
+    t.string "exclusion_seek_reason"
+    t.string "exclusion_studyhub_reason"
+    t.boolean "inclusion_studyhub"
+    t.boolean "inclusion_seek"
+    t.boolean "inclusion_mica"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "assay_id"
+    t.bigint "study_id"
+    t.integer "studyhub_resource_type_id"
+    t.integer "contributor_id"
+    t.integer "policy_id"
+    t.string "uuid"
+    t.string "first_letter", limit: 1
+    t.string "title"
+    t.integer "stage"
+    t.datetime "last_used_at"
+    t.index ["assay_id"], name: "index_studyhub_resources_on_assay_id"
+    t.index ["study_id"], name: "index_studyhub_resources_on_study_id"
+  end
+
   create_table "subscriptions", id: :integer,  force: :cascade do |t|
     t.integer "person_id"
     t.integer "subscribable_id"
@@ -1977,7 +2049,7 @@ ActiveRecord::Schema.define(version: 2021_11_11_133408) do
     t.index ["user_id", "can_view"], name: "index_w_auth_lookup_on_user_id_and_can_view"
   end
 
-  create_table "workflow_classes", id: :integer,  force: :cascade do |t|
+  create_table "workflow_classes",  force: :cascade do |t|
     t.string "title"
     t.text "description"
     t.string "key"
