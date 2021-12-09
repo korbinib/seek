@@ -25,7 +25,7 @@ module WorkflowExtraction
     end
   end
 
-  delegate :default_diagram_format, :can_render_diagram?, :has_tests?, to: :extractor
+  delegate :can_render_diagram?, :has_tests?, to: :extractor
 
   def is_git_ro_crate?
     is_git_versioned? && git_version.ro_crate?
@@ -61,18 +61,19 @@ module WorkflowExtraction
     can_download?(nil) && workflow_class_title == 'Galaxy' && Seek::Config.galaxy_instance_trs_import_url.present?
   end
 
-  def diagram_exists?(format = default_diagram_format)
-    File.exist?(cached_diagram_path(format))
+  def diagram_exists?
+    path = Dir.glob(cached_diagram_path('*')).last
+    path && File.exist?(path)
   end
 
-  def diagram(format = default_diagram_format)
-    path = Pathname.new(cached_diagram_path(format))
-    content_type = extractor.class.diagram_formats[format]
-    raise(WorkflowDiagram::UnsupportedFormat, "Unsupported diagram format: #{format}") if content_type.nil?
+  def diagram
+    path = Dir.glob(cached_diagram_path('*')).last
 
-    unless path.exist?
-      diagram = extractor.generate_diagram(format)
+    unless path && File.exist?(path)
+      e = extractor
+      diagram = e.generate_diagram
       return nil if diagram.nil? || diagram.length <= 1
+      path = Pathname.new(cached_diagram_path(e.diagram_extension))
       path.parent.mkdir unless path.parent.exist?
       File.binwrite(path, diagram)
     end
@@ -83,26 +84,30 @@ module WorkflowExtraction
   def populate_ro_crate(crate)
     if is_git_versioned?
       remotes = git_version.remote_sources
-      crate.main_workflow = main_workflow_blob.to_crate_entity(crate, type: ROCrate::Workflow)
-      remotes.delete(main_workflow_blob.path)
+      m = main_workflow_blob
+      if m
+        crate.main_workflow = main_workflow_blob.to_crate_entity(crate, type: ROCrate::Workflow)
+        remotes.delete(main_workflow_blob.path)
+        crate.main_workflow.programming_language = ROCrate::ContextualEntity.new(crate, nil, workflow_class&.ro_crate_metadata || Seek::WorkflowExtractors::Base::NULL_CLASS_METADATA)
+      end
+
       d = diagram_blob
       if d
         remotes.delete(d.path)
         crate.main_workflow.diagram = d.to_crate_entity(crate, type: ROCrate::WorkflowDiagram)
       else # Was the diagram generated?
-        begin
-          d = diagram
-          if d&.exists?
-            crate.main_workflow.diagram = d.to_crate_entity(crate)
-          end
-        rescue WorkflowDiagram::UnsupportedFormat
+        d = diagram
+        if d&.exists?
+          crate.main_workflow.diagram = d.to_crate_entity(crate)
         end
       end
+
       c = abstract_cwl_blob
       if c
         remotes.delete(c.path)
         crate.main_workflow.cwl_description = c.to_crate_entity(crate, type: ROCrate::WorkflowDescription)
       end
+
       remotes.each do |path, url|
         crate.add_external_file(url)
       end
@@ -110,18 +115,14 @@ module WorkflowExtraction
       unless crate.main_workflow
         crate.main_workflow = ROCrate::Workflow.new(crate, content_blob.filepath, content_blob.original_filename, contentSize: content_blob.file_size)
       end
-      begin
-        d = diagram
-        if d&.exists?
-          wdf = crate.main_workflow_diagram || ROCrate::WorkflowDiagram.new(crate, d.path, d.filename)
-          wdf.content_size = d.size
-          crate.main_workflow.diagram = wdf
-        end
-      rescue WorkflowDiagram::UnsupportedFormat
+      d = diagram
+      if d&.exists?
+        wdf = crate.main_workflow_diagram || ROCrate::WorkflowDiagram.new(crate, d.path, d.filename)
+        wdf.content_size = d.size
+        crate.main_workflow.diagram = wdf
       end
     end
 
-    crate.main_workflow.programming_language = ROCrate::ContextualEntity.new(crate, nil, workflow_class&.ro_crate_metadata || Seek::WorkflowExtractors::Base::NULL_CLASS_METADATA)
     authors = creators.map { |person| crate.add_person(nil, person.ro_crate_metadata) }
     others = other_creators&.split(',')&.collect(&:strip)&.compact || []
     authors += others.map.with_index { |name, i| crate.add_person("creator-#{i + 1}", name: name) }
@@ -160,7 +161,7 @@ module WorkflowExtraction
     flattened['@graph'].each do |elem|
       type = elem['@type']
       type = [type] unless type.is_a?(Array)
-      if type.include?('ComputationalWorkflow')
+      if type.include?('ComputationalWorkflow') && crate.main_workflow
         merge_fields(crate.main_workflow, elem)
       else
         entity_class = ROCrate::ContextualEntity.specialize(elem)

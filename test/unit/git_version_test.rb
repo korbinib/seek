@@ -6,6 +6,19 @@ class GitVersionTest < ActiveSupport::TestCase
     assert_equal 'Version 1', workflow.git_version.name
   end
 
+  test 'create new git version' do
+    workflow = Factory(:local_git_workflow)
+    assert_equal 1, workflow.version
+    assert_equal 1, workflow.latest_git_version.version
+    assert_equal 1, workflow.git_versions.count
+    disable_authorization_checks do
+      assert workflow.latest_git_version.next_version.save
+    end
+    assert_equal 2, workflow.version
+    assert_equal 2, workflow.latest_git_version.version
+    assert_equal 2, workflow.git_versions.count
+  end
+
   test 'lock version' do
     repo = Factory(:local_repository)
     workflow = repo.resource
@@ -101,11 +114,12 @@ class GitVersionTest < ActiveSupport::TestCase
 
   test 'automatically init local git repo' do
     w = Factory(:workflow)
-    v = w.git_versions.create
-
-    assert v.git_repository
-    assert w.local_git_repository
-    assert_equal w.local_git_repository, v.git_repository
+    disable_authorization_checks do
+      v = w.git_versions.create
+      assert v.git_repository
+      assert w.local_git_repository
+      assert_equal w.local_git_repository, v.git_repository
+    end
   end
 
   test 'automatically link existing remote git repos' do
@@ -263,6 +277,7 @@ class GitVersionTest < ActiveSupport::TestCase
 
     next_ver = gv.next_version
 
+    assert_includes gv.resource.git_versions, next_ver
     refute next_ver.persisted?
     assert_equal gv.version + 1, next_ver.version
     assert_equal "Version #{gv.version + 1}", next_ver.name

@@ -13,16 +13,26 @@ module Git
         self.git_version_class_name = options[:git_version_class_name] || 'Git::Version'
 
         class_eval do
-          has_many :git_versions, as: :resource, dependent: :destroy, class_name: 'Git::Version'
-          has_one :local_git_repository, as: :resource, class_name: 'Git::Repository'
+          has_many :git_versions, as: :resource, dependent: :destroy, class_name: 'Git::Version', inverse_of: :resource
+          has_one :local_git_repository, as: :resource, class_name: 'Git::Repository', inverse_of: :resource
 
           attr_accessor :git_version_attributes
+          attr_writer :is_git_versioned
 
           after_create :save_git_version_on_create, if: -> { Seek::Config.git_support_enabled }
           after_update :sync_resource_attributes
 
           def is_git_versioned?
-            git_version&.git_repository&.persisted? || !@git_version_attributes.blank?
+            git_versions.any? || !@git_version_attributes.blank?
+          end
+
+          def is_git_versioned=(truth)
+            if truth && new_record?
+              repo = Git::Repository.create!
+              @git_version_attributes = { git_repository_id: repo.id, comment: 'Initial commit' }
+              self.local_git_repository = repo
+              initial_git_version.assign_attributes(@git_version_attributes)
+            end
           end
 
           def git_version
@@ -39,7 +49,7 @@ module Git
 
           def save_git_version_on_create
             return if @git_version_attributes.blank?
-            version = initial_git_version
+            version = build_initial_git_version
             version.resource_attributes = self.attributes
             version.save
             self.git_version_attributes = nil
@@ -61,8 +71,12 @@ module Git
             version.sync_resource_attributes
           end
 
+          def build_initial_git_version
+            self.git_versions.first_or_initialize(@git_version_attributes)
+          end
+
           def initial_git_version
-            @initial_git_version ||= self.git_versions.build(@git_version_attributes)
+            @initial_git_version ||= build_initial_git_version
           end
 
           def visible_git_versions(user = User.current_user)
@@ -71,6 +85,10 @@ module Git
             scopes << Seek::ExplicitVersioning::VISIBILITY_INV[:private] if can_manage?(user)
 
             git_versions.where(visibility: scopes)
+          end
+
+          def git_search_terms
+            git_version.search_terms[0..920000]
           end
 
           # def state_allows_download?(*args)
