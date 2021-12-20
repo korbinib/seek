@@ -24,9 +24,17 @@ module Seek
       end
 
       def index
-        entity_type
-        entity_types
-        entities
+        begin
+          entity_type
+          entity_types
+          entities
+        rescue Fairdom::OpenbisApi::OpenbisQueryException => e
+          if e.message
+            flash[:error] = "An error occured with the OpenBis connector. Detailed message: \n" + e.message
+          else
+            flash[:error] = "An error occured with the OpenBis connector"
+          end
+        end
       end
 
       def edit
@@ -262,7 +270,7 @@ module Seek
       end
 
       # overides the after_action callback from application_controller,
-      # as the behaviour needs to be slightly different (based on Sturat's code)
+      # as the behaviour needs to be slightly different (based on Stuart's code)
       def log_event
         action = action_name.downcase
         return unless %w[register update batch_register].include? action

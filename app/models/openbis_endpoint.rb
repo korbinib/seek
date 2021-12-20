@@ -55,7 +55,17 @@ class OpenbisEndpoint < ApplicationRecord
   end
 
   def space
+    begin
     @space ||= Seek::Openbis::Space.new(self, space_perm_id)
+    rescue Fairdom::OpenbisApi::OpenbisQueryException => e
+      if e.message
+        puts("An error occured with the OpenBis connector. Detailed message: \n" + e.message)
+        @space = "An error occured with the OpenBis connector. Detailed message: \n" + e.message
+      else
+        @space = "An error occured with the OpenBis connector. Detailed message: \n"
+      end
+    end
+    @space
   end
 
   def title
