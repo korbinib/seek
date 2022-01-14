@@ -2,7 +2,7 @@
 module ShrMultiStepWizardHelper
 
   def shr_cancel_button
-    cancel_button(studyhub_resources_path)
+    cancel_button(new_studyhub_resource_path)
   end
   def shr_multi_step_back_icons
     content_tag(:button, ' ', class: 'multi-step-start-icon') +
