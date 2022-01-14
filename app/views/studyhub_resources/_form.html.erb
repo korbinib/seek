@@ -4,7 +4,7 @@
         overflow-y:auto;
     }
 </style>
-
+<% sr_type = @studyhub_resource.studyhub_resource_type %>
 <% @error_keys = @studyhub_resource.errors.messages.keys.map {|x| x.to_s}%>
 <%#= @studyhub_resource.errors.messages.inspect %>
 
@@ -13,17 +13,16 @@
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-title">
-          <h4>New <%= t('studyhub_resource') %>:</h4>
+          <h3>New <%= sr_type.title %></h3>
+        </div>
+        <div id ="step_two">
+          <h4>Step 2: Fill out metadata</h4>
         </div>
       </div>
       <div class="modal-body">
         <div id='datafile-multi-set' class='multi-step'>
           <div class="asset_form">
             <div id="studyhub_resource_attributes_container">
-              <div id ="step_two">
-                <h3>Step 2: Fill out metadata</h3>
-              </div>
-
             <% step = 0 %>
 
             <%= content_tag(:div, id: "step-#{step += 1}", class: 'multi-step-block') do %>

@@ -1,9 +1,10 @@
+<% sr_type = @studyhub_resource.studyhub_resource_type %>
 <div class="row">
   <div style="margin:auto;width:70%;">
-    <div class="">
       <div id ="step_two">
-        <h3>Step 1: Upload a file</h3>
+        <h1>New <%= sr_type.title.downcase %></h1>
         <div class="asset_form">
+          <h4>Step 1: Upload a file</h4>
           <%= form_tag({:action => :create_content_blob}, :method => :post, multipart: true) do -%>
             <%= hidden_field_tag "studyhub_resource[studyhub_resource_type]", @studyhub_resource.studyhub_resource_type.key -%>
             <%= error_messages_for :studyhub_resource -%>
@@ -12,7 +13,6 @@
 
             <div>
               <%= create_button id:"studyhub_resource_submit_btn",
-                                # onclick:"return validateResourceFields('data_file');",
                                 class:'btn btn-primary',
                                 button_text:'Upload',
                                 'data-upload-file-text' => 'Upload' %>
