@@ -50,9 +50,9 @@ var SR = {
 
     enableNextButton: function () {
         if ($j(this).val() == '') {
-            $j('#select_sr_type_button').prop('disabled', true);
+            $j('#select_shr_type_button').prop('disabled', true);
         } else {
-            $j('#select_sr_type_button').prop('disabled', false);
+            $j('#select_shr_type_button').prop('disabled', false);
         }
 
     },

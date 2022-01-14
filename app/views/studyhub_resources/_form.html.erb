@@ -1,27 +1,71 @@
+<%= javascript_include_tag :multi_step_wizard %>
+<style>
+    .modal {
+        overflow-y:auto;
+    }
+</style>
+
 <% @error_keys = @studyhub_resource.errors.messages.keys.map {|x| x.to_s}%>
 <%#= @studyhub_resource.errors.messages.inspect %>
 
-<div class="alert alert-danger">
-  <div>
-    The fields marked with<label class="save-required"></label> are required before you can save the resource. <br>
-    The fields marked with<label class="submit-required"></label> are required before you can submit the resource.<br>
-    You are able to save the resource first with essential data and complete it later with details.
+<div class="modal" tabindex="-1" role="dialog" id="data-file-modal">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <h4>New <%= t('studyhub_resource') %>:</h4>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div id='datafile-multi-set' class='multi-step'>
+          <div class="asset_form">
+            <div id="studyhub_resource_attributes_container">
+              <div id ="step_two">
+                <h3>Step 2: Fill out metadata</h3>
+              </div>
+
+            <% step = 0 %>
+
+            <%= content_tag(:div, id: "step-#{step += 1}", class: 'multi-step-block') do %>
+              <span class='multi-step-progress-indicator'></span>
+              <%= render partial: 'studyhub_basic', locals: { :f => f, :collapsed => collapsed } %>
+            <% end %>
+
+            <%= content_tag(:div, id: "step-#{step += 1}", class: 'multi-step-block') do %>
+              <span class='multi-step-progress-indicator'></span>
+              <%= render :partial => 'resource_roles', :locals=> { :f => f,:collapsed => collapsed} %>
+            <% end %>
+
+              <%= content_tag(:div, id: "step-#{step += 1}", class: 'multi-step-block') do %>
+                <span class='multi-step-progress-indicator'></span>
+              <%= render :partial => 'resource_ids', :locals=> { :f => f,:collapsed => collapsed} %>
+              <% end %>
+
+            <% if @studyhub_resource.is_studytype? %>
+            <%= content_tag(:div, id: "step-#{step += 1}", class: 'multi-step-block') do %>
+              <span class='multi-step-progress-indicator'></span>
+                <%= render partial: 'studyhub_study_design_input', locals: { :f => f, :collapsed => collapsed } %>
+          <% end %>
+            <% end -%>
+
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<div id="studyhub_resource_attributes_container">
-  <div id ="step_two">
-    <h3>Step 2: Fill out metadata</h3>
-  </div>
-  <%= render partial: 'studyhub_basic', locals: { :f => f, :collapsed => collapsed } %>
-  <%= render :partial => 'resource_roles', :locals=> { :f => f,:collapsed => collapsed} %>
-  <%= render :partial => 'resource_ids', :locals=> { :f => f,:collapsed => collapsed} %>
-  <% if @studyhub_resource.is_studytype? %>
-     <%= render partial: 'studyhub_study_design_input', locals: { :f => f, :collapsed => collapsed } %>
-  <% end -%>
-</div>
+
+
+
 
 <script type="text/javascript">
+    $j(document).ready(function(){
+        $j('#data-file-modal').modal({backdrop: 'static', keyboard: false});
+    });
+
+
 
     <% unless @studyhub_resource.is_studytype? %>
     $j(document).ready(function () {
@@ -51,4 +95,5 @@
         });
 
     });
+
 </script>

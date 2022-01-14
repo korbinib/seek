@@ -1,4 +1,4 @@
-
+<% is_modal ||= false %>
 <% help_text = "Please provide some basic details about the #{t('studyhub_resources.studyhub_resource').downcase} that will be created." %>
   <%= folding_panel("Basic Information:", collapsed, :body_options => {:id => 'basic_info'},
                     :help_text => help_text) do %>
@@ -10,6 +10,16 @@
     <%= render :partial => 'studyhub_resource_input', locals: { :f => f } %>
   </div>
   <button type="button" class="btn btn-success float-right" onclick="toggle('resource_roles')">Next</button>
+
+  <%if(is_modal)%>
+    <a class=" btn btn-default" onClick="location.reload();">Cancel</a>
+  <%else%>
+    <%= shr_cancel_button -%>
+  <%end%>
+  <div class='multi-step-buttons'>
+    <%= shr_multi_step_forward_button %>
+  </div>
 <% end %>
 
+<%= shr_wizard_footer_tips %>
 
