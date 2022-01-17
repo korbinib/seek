@@ -32,7 +32,7 @@ module WorkflowExtraction
   end
 
   def is_already_ro_crate?
-    content_blob && content_blob.original_filename.end_with?('.crate.zip') || is_git_ro_crate?
+    (!is_git_versioned? && content_blob.original_filename.end_with?('.crate.zip')) || is_git_ro_crate?
   end
 
   def is_basic_ro_crate?
@@ -94,18 +94,24 @@ module WorkflowExtraction
       d = diagram_blob
       if d
         remotes.delete(d.path)
-        crate.main_workflow.diagram = d.to_crate_entity(crate, type: ROCrate::WorkflowDiagram)
+        diagram_entity = d.to_crate_entity(crate, type: ROCrate::WorkflowDiagram)
+        crate.add_data_entity(diagram_entity)
+        crate.main_workflow.diagram = diagram_entity if crate.main_workflow
       else # Was the diagram generated?
         d = diagram
         if d&.exists?
-          crate.main_workflow.diagram = d.to_crate_entity(crate)
+          diagram_entity = d.to_crate_entity(crate)
+          crate.add_data_entity(diagram_entity)
+          crate.main_workflow.diagram = diagram_entity if crate.main_workflow
         end
       end
 
       c = abstract_cwl_blob
       if c
         remotes.delete(c.path)
-        crate.main_workflow.cwl_description = c.to_crate_entity(crate, type: ROCrate::WorkflowDescription)
+        cwl_entity = c.to_crate_entity(crate, type: ROCrate::WorkflowDescription)
+        crate.add_data_entity(cwl_entity)
+        crate.main_workflow.cwl_description = cwl_entity if crate.main_workflow
       end
 
       remotes.each do |path, url|

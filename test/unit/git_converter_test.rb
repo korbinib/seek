@@ -176,6 +176,7 @@ class GitConverterTest < ActiveSupport::TestCase
     assert_equal 'Dave', gv1.other_creators
     assert_equal :work_in_progress, gv1.maturity_level
     assert_equal :private, gv1.visibility
+    refute gv1.mutable?
 
     assert_equal '10.81082/dev-workflowhub.workflow.136.1', gv2.doi
     assert_equal 'CC-BY-4.0', gv2.license
@@ -184,6 +185,7 @@ class GitConverterTest < ActiveSupport::TestCase
     assert_equal 'Steve', gv2.other_creators
     assert_equal :released, gv2.maturity_level
     assert_equal :public, gv2.visibility
+    assert gv2.mutable?
 
     keys = gv2.resource_attributes.keys.map(&:to_s)
     assert_not_includes keys, 'id'
@@ -217,5 +219,111 @@ class GitConverterTest < ActiveSupport::TestCase
     assert_nothing_raised do
       workflow.ro_crate_zip
     end
+  end
+
+  test 'safely re-run conversion process without creating additional records' do
+    workflow = Factory(:existing_galaxy_ro_crate_workflow)
+
+    converter = Git::Converter.new(workflow)
+
+    refute workflow.local_git_repository
+    refute workflow.latest_git_version
+
+    assert_difference('Git::Annotation.count', 2) do
+      assert_difference('Git::Repository.count', 1) do
+        assert_difference('Git::Version.count', 1) do
+          converter.convert(unzip: true)
+        end
+      end
+    end
+
+    assert_no_difference('Git::Annotation.count') do
+      assert_no_difference('Git::Repository.count') do
+        assert_no_difference('Git::Version.count') do
+          converter.convert(unzip: true)
+        end
+      end
+    end
+
+    assert workflow.local_git_repository
+    assert_equal 1, workflow.git_versions.count
+    assert workflow.latest_git_version.file_exists?('1-PreProcessing.ga')
+    assert workflow.latest_git_version.file_exists?('pp_wf.png')
+    assert workflow.latest_git_version.file_exists?('ro-crate-preview.html')
+    assert_equal '1-PreProcessing.ga', workflow.latest_git_version.main_workflow_path
+    assert_equal 'pp_wf.png', workflow.latest_git_version.diagram_path
+
+    author = workflow.latest_git_version.git_base.lookup(workflow.latest_git_version.commit).author
+    assert_equal workflow.contributor.name, author[:name]
+    assert_equal workflow.contributor.email, author[:email]
+    assert_in_delta workflow.latest_version.created_at.to_time, author[:time], 1.second
+  end
+
+  test 're-run conversion process and overwrite previous records' do
+    workflow = Factory(:existing_galaxy_ro_crate_workflow)
+
+    converter = Git::Converter.new(workflow)
+
+    refute workflow.local_git_repository
+    refute workflow.latest_git_version
+
+    assert_difference('Git::Annotation.count', 2) do
+      assert_difference('Git::Repository.count', 1) do
+        assert_difference('Git::Version.count', 1) do
+          converter.convert(unzip: true)
+        end
+      end
+    end
+
+    repo = workflow.local_git_repository
+    gv = workflow.git_version
+
+    assert_no_difference('Git::Annotation.count') do
+      assert_no_difference('Git::Repository.count') do
+        assert_no_difference('Git::Version.count') do
+          converter.convert(unzip: true, overwrite: true)
+        end
+      end
+    end
+
+    assert_not_equal repo.id, workflow.reload.local_git_repository.id
+    assert_not_equal gv.id, workflow.reload.git_version.id
+
+    assert workflow.local_git_repository
+    assert_equal 1, workflow.git_versions.count
+    assert workflow.latest_git_version.file_exists?('1-PreProcessing.ga')
+    assert workflow.latest_git_version.file_exists?('pp_wf.png')
+    assert workflow.latest_git_version.file_exists?('ro-crate-preview.html')
+    assert_equal '1-PreProcessing.ga', workflow.latest_git_version.main_workflow_path
+    assert_equal 'pp_wf.png', workflow.latest_git_version.diagram_path
+
+    author = workflow.latest_git_version.git_base.lookup(workflow.latest_git_version.commit).author
+    assert_equal workflow.contributor.name, author[:name]
+    assert_equal workflow.contributor.email, author[:email]
+    assert_in_delta workflow.latest_version.created_at.to_time, author[:time], 1.second
+  end
+
+  test 'converted workflow does not retain original files from RO-Crate' do
+    workflow = Factory(:generated_galaxy_ro_crate_workflow)
+
+    converter = Git::Converter.new(workflow)
+
+    refute workflow.local_git_repository
+    refute workflow.latest_git_version
+
+    assert_difference('Git::Annotation.count', 3) do
+      assert_difference('Git::Repository.count', 1) do
+        assert_difference('Git::Version.count', 1) do
+          converter.convert(unzip: true)
+        end
+      end
+    end
+
+    assert_difference('Git::Annotation.count', -1) do
+      workflow.git_version.remove_file('Genomics-1-PreProcessing_without_downloading_from_SRA.cwl')
+    end
+
+    refute workflow.ro_crate.entries.key?('Genomics-1-PreProcessing_without_downloading_from_SRA.cwl')
+    assert workflow.ro_crate.entries.key?('Genomics-1-PreProcessing_without_downloading_from_SRA.ga')
   end
 end
