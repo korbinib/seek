@@ -77,7 +77,6 @@ class StudyhubResourcesController < ApplicationController
           format.html { redirect_to studyhub_resource_path(@studyhub_resource)}
           format.json  { render json: @studyhub_resource, status: :created, location: @studyhub_resource }
         else
-          flash.now[:error] = @studyhub_resource.errors.messages[:base].join('<br/>').html_safe
           format.html {render template: 'studyhub_resources/new_resource', locals: { sr_type: type },status: :unprocessable_entity}
           format.json {render json: json_api_errors(@studyhub_resource), status: :unprocessable_entity}
         end
@@ -122,7 +121,6 @@ class StudyhubResourcesController < ApplicationController
         format.json  {render json: @studyhub_resource, status: :created, location: @studyhub_resource}
 
       else
-        flash.now[:error] = @studyhub_resource.errors.messages[:base].join('<br/>').html_safe
         format.html { render template: 'studyhub_resources/new_resource', locals: { sr_type: type }, status: :unprocessable_entity}
       end
     end
@@ -169,7 +167,6 @@ class StudyhubResourcesController < ApplicationController
         format.json { render json: @studyhub_resource, status: 200 }
 
       else
-        flash.now[:error] = @studyhub_resource.errors.messages[:base].join('<br/>').html_safe
         format.html { render action: 'edit' }
         format.json { render json: json_api_errors(@studyhub_resource), status: :unprocessable_entity }
       end
