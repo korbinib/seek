@@ -1,4 +1,3 @@
-<% is_modal ||= false %>
 <% help_text = "Please add help text for this section." %>
 <% inital = @studyhub_resource.resource_json.nil? || @studyhub_resource.resource_json['ids'].blank? %>
 <%= folding_panel("Associated Resources:", collapsed, :body_options => {:id => 'associated_resources'},
@@ -68,12 +67,8 @@
     </table>
   </div>
 
-  <button type="button" class="btn btn-success float-right" onclick="toggle('study_design_general')">Next</button>
-  <%if(is_modal)%>
-    <a class=" btn btn-default" onClick="location.reload();">Cancel</a>
-  <%else%>
-    <%= shr_cancel_button -%>
-  <%end%>
+  <%= shr_cancel_button -%>
+
   <div class='multi-step-buttons'>
     <%= shr_multi_step_start_button %>
     <%= shr_multi_step_back_button %>

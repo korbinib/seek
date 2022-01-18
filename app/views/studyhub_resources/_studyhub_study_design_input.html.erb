@@ -1,4 +1,3 @@
-<% is_modal ||= false %>
 <% resource = @studyhub_resource.resource_json.nil? ? nil : @studyhub_resource.resource_json["study_design"] %>
 
 <div id="studyhub_resource_study_design">
@@ -7,7 +6,6 @@
 
   <% cmt = CustomMetadataType.where(title:"NFDI4Health Studyhub Resource StudyDesign General",supported_type:@studyhub_resource.class.name).first %>
   <%= render partial: 'studyhub_resources/studyhub_custom_metadata_fields', locals: { custom_metadata_type: cmt, resource: resource, :f => f,  collapsed: collapsed } %>
-    <button id="study_primary_design_next_button" type="button" class="btn btn-success float-right hidden" onclick="toggle('study_design_interventional')">Next</button>
 <% end %>
 
     <%= folding_panel("Non Interventional Study:", collapsed, :body_options => {:id => 'study_design_non_interventional'},
@@ -24,11 +22,7 @@
     <% cmt = CustomMetadataType.where(title:"NFDI4Health Studyhub Resource StudyDesign Interventional Study",supported_type:@studyhub_resource.class.name).first %>
     <%= render partial: 'studyhub_resources/studyhub_custom_metadata_fields', locals: { custom_metadata_type: cmt, resource: resource, :f => f,  collapsed: collapsed } %>
   <% end %>
-  <%if(is_modal)%>
-    <a class=" btn btn-default" onClick="location.reload();">Cancel</a>
-  <%else%>
     <%= shr_cancel_button -%>
-  <%end%>
   <div class='multi-step-buttons'>
     <%= shr_multi_step_start_button %>
     <%= shr_multi_step_back_button %>

@@ -1,4 +1,3 @@
-<% is_modal ||= false %>
 <% help_text = "A role, or a contributor, is a person, a group of persons or an institution contributing to the development of the resource." %>
   <%= folding_panel("Contributors:", collapsed, :body_options => {:id => 'resource_roles'},
                     :help_text => help_text) do %>
@@ -36,16 +35,9 @@
       <%= render :partial => 'role_row', :locals=> {:role=>nil,:f => f} %>
     </div>
   </div>
-  <% if @studyhub_resource.is_studytype? %>
-    <button type="button" class="btn btn-success float-right" onclick="toggle('associated_resources')">Next</button>
-  <% end %>
 
+  <%= shr_cancel_button -%>
 
-  <%if(is_modal)%>
-    <a class=" btn btn-default" onClick="location.reload();">Cancel</a>
-  <%else%>
-    <%= shr_cancel_button -%>
-  <%end%>
   <div class='multi-step-buttons'>
     <%= shr_multi_step_start_button %>
     <%= shr_multi_step_back_button %>
