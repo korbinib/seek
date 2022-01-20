@@ -7,7 +7,6 @@
 <% sr_type = @studyhub_resource.studyhub_resource_type %>
 <% @error_keys = @studyhub_resource.errors.messages.keys.map {|x| x.to_s}%>
 <% error_messages = @studyhub_resource.errors.messages[:base].join('<br/>').html_safe %>
-<%#= @studyhub_resource.errors.messages.inspect %>
 
 <div class="modal " tabindex="-1" role="dialog" id="studyhub-resource-modal">
   <div class="modal-dialog modal-xl" role="document">
@@ -24,6 +23,7 @@
         <div id='datafile-multi-set' class='multi-step'>
           <div class="asset_form">
             <% unless error_messages.blank? %>
+              <%#= @studyhub_resource.errors.messages.inspect %>
               <%= alert_box('danger', :id => 'error_flash', :class => 'fade in') do %>
                 <%= error_messages %>
               <% end %>
