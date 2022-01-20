@@ -1,0 +1,19 @@
+<div class="modal shr-alert-model fade" id="leave-alert-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+
+      <div class="modal-body">
+      <div class="alert alert-warning">
+        <h3><span>&#9888;</span>
+          Are you sure?</h3>
+        <div>If you leave before saving, your changes will be lost.</div>
+      </div>
+
+        <%= shr_cancel_comfirm_button -%>
+        <%= submit_tag('Save',  title: "save_button_help_text", class: 'btn btn-primary', name:'studyhub_resource[commit_button]', id: 'save-button',
+                       disabled: false) %>
+      </div>
+
+    </div>
+  </div>
+</div>

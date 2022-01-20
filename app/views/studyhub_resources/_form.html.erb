@@ -9,7 +9,7 @@
 <% error_messages = @studyhub_resource.errors.messages[:base].join('<br/>').html_safe %>
 <%#= @studyhub_resource.errors.messages.inspect %>
 
-<div class="modal" tabindex="-1" role="dialog" id="data-file-modal">
+<div class="modal" tabindex="-1" role="dialog" id="studyhub-resource-modal">
   <div class="modal-dialog modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -53,6 +53,7 @@
             <% end -%>
 
           </div>
+            <%= shr_leave_alert_modal -%>
           </div>
         </div>
       </div>
@@ -61,12 +62,9 @@
 </div>
 
 
-
-
-
 <script type="text/javascript">
     $j(document).ready(function(){
-        $j('#data-file-modal').modal({backdrop: 'static', keyboard: false});
+        $j('#studyhub-resource-modal').modal({backdrop: 'static', keyboard: false});
     });
 
 
@@ -96,6 +94,10 @@
             this.expand = !this.expand;
             $j(this).text(this.expand? " read less":" read more");
             $j(this).closest('.addtional-info').find('.less, .more').toggleClass('less more');
+        });
+
+        $j('.shr_cancel_button').on('click', function (e) {
+            $j('#studyhub-resource-modal').scrollTop(0);
         });
 
     });

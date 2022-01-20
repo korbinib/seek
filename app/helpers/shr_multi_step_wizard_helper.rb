@@ -1,9 +1,18 @@
 # helper methods to support a wizard like form with multiple steps (e.g. for data file uploads)
 module ShrMultiStepWizardHelper
 
-  def shr_cancel_button
-    cancel_button(new_studyhub_resource_path)
+  def shr_cancel_comfirm_button
+    cancel_button(new_studyhub_resource_path, button_text: 'Yes, I will continue to cancel', class: 'btn-secondary' )
   end
+
+  def shr_cancel_button
+    link_to 'Cancel', '#', class: 'shr_cancel_button btn btn-default', type: 'button',  data: { toggle: 'modal', target:'#leave-alert-modal'}
+  end
+
+  def shr_leave_alert_modal
+    render partial: 'studyhub_resources/leave_alert'
+  end
+
   def shr_multi_step_back_icons
     content_tag(:button, ' ', class: 'multi-step-start-icon') +
       content_tag(:button, ' ', class: 'multi-step-back-icon')
