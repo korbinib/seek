@@ -11,6 +11,7 @@ class StudyhubResource < ApplicationRecord
 
   validate :check_title_presence, on:  [:create, :update]
   validate :check_urls, on:  [:create, :update]
+  validate :check_nfdi4health_resource_id_presence, on:  [:create, :update]
   validate :check_numericality, on:  [:create, :update], if: :is_studytype?
   validate :end_date_is_after_start_date, on: [:create, :update], if: :is_studytype?
   validate :check_id_presence, on: [:create, :update], if: :request_to_submit?
@@ -146,6 +147,14 @@ class StudyhubResource < ApplicationRecord
       unless id['id_id'].blank?
         errors.add("ids[#{index}]['id_type']".to_sym, "can't be blank")  if id['id_type'].blank?
         errors.add("ids[#{index}]['id_relation_type']".to_sym, "can't be blank")  if id['id_relation_type'].blank?
+      end
+    end
+  end
+
+  def check_nfdi4health_resource_id_presence
+    resource_json['ids']&.each_with_index do |id,index|
+      if !id['id_id'].blank? && id['id_type'] == 'NFDI4Health'
+        errors.add("ids[#{index}]['id_id']".to_sym, 'NFDI4Health ID does not exist.')  if StudyhubResource.where(id: id['id_id'].to_i).empty?
       end
     end
   end
