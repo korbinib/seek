@@ -72,7 +72,13 @@
   <div class='multi-step-buttons'>
     <%= shr_multi_step_start_button %>
     <%= shr_multi_step_back_button %>
-    <%= shr_multi_step_forward_button %>
+
+    <% unless @studyhub_resource.is_studytype? %>
+       <%= render :partial=> "set_buttons" %>
+      <% else %>
+        <%= shr_multi_step_forward_button %>
+        <%= shr_multi_step_end_button %>
+    <% end %>
   </div>
 <% end %>
 

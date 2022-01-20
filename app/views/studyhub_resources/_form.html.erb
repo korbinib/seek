@@ -9,8 +9,8 @@
 <% error_messages = @studyhub_resource.errors.messages[:base].join('<br/>').html_safe %>
 <%#= @studyhub_resource.errors.messages.inspect %>
 
-<div class="modal" tabindex="-1" role="dialog" id="studyhub-resource-modal">
-  <div class="modal-dialog modal-lg" role="document">
+<div class="modal " tabindex="-1" role="dialog" id="studyhub-resource-modal">
+  <div class="modal-dialog modal-xl" role="document">
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-title">
@@ -96,10 +96,9 @@
             $j(this).closest('.addtional-info').find('.less, .more').toggleClass('less more');
         });
 
-        $j('.shr_cancel_button').on('click', function (e) {
+        $j('.shr_cancel_button, .multi-step-start-button, .multi-step-end-button, .multi-step-back-button, .multi-step-next-button').on('click', function (e) {
             $j('#studyhub-resource-modal').scrollTop(0);
         });
-
     });
 
 </script>
