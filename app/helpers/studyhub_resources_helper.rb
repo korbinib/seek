@@ -74,7 +74,14 @@ module StudyhubResourcesHelper
         html += '<tr>'
         html += '<td class="id_resource_type_general">' + d['id_resource_type_general'] + '</td>'
         html += '<td class="id_type">' + d['id_type'] + '</td>'
-        html += '<td class="id_id">' + d['id_id'] + '</td>'
+
+        if d['id_type'] == 'URL'
+          html += '<td class="id_id">'+link_to(d['id_id'], d['id_id'], target: '_blank') + '</td>'  unless d['id_id'].blank?
+        else
+          html += '<td class="id_id">' + d['id_id'] + '</td>'
+        end
+
+
         html += '<td class="id_date">' + d['id_date'] + '</td>'
         html += '<td class="id_relation_type">' + (d['id_relation_type'].nil? ? '' : d['id_relation_type'].underscore.humanize) + '</td>'
         html += '</tr>'
