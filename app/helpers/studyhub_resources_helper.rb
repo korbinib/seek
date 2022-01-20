@@ -75,12 +75,16 @@ module StudyhubResourcesHelper
         html += '<td class="id_resource_type_general">' + d['id_resource_type_general'] + '</td>'
         html += '<td class="id_type">' + d['id_type'] + '</td>'
 
-        if d['id_type'] == 'URL'
-          html += '<td class="id_id">'+link_to(d['id_id'], d['id_id'], target: '_blank') + '</td>'  unless d['id_id'].blank?
-        else
-          html += '<td class="id_id">' + d['id_id'] + '</td>'
+        unless d['id_id'].blank?
+          case d['id_type']
+          when 'URL'
+            html += '<td class="id_id">'+link_to(d['id_id'], d['id_id'], target: '_blank') + '</td>'
+          when 'DOI'
+            html += '<td class="id_id">'+link_to(d['id_id'], doi_uri(d['id_id']), target: '_blank') + '</td>'
+          else
+            html += '<td class="id_id">' + d['id_id'] + '</td>'
+          end
         end
-
 
         html += '<td class="id_date">' + d['id_date'] + '</td>'
         html += '<td class="id_relation_type">' + (d['id_relation_type'].nil? ? '' : d['id_relation_type'].underscore.humanize) + '</td>'
@@ -401,5 +405,12 @@ module StudyhubResourcesHelper
     end
     role_name
   end
+
+
+  def doi_uri(doi)
+    doi = doi.gsub(/(https?:\/\/)?(dx\.)?doi\.org\//,'')
+    "https://doi.org/#{doi}" if doi
+  end
+
 
 end
