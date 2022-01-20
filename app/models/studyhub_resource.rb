@@ -11,7 +11,7 @@ class StudyhubResource < ApplicationRecord
 
   validate :check_title_presence, on:  [:create, :update]
   validate :check_urls, on:  [:create, :update]
-  validate :check_nfdi4health_resource_id_presence, on:  [:create, :update]
+  validate :check_related_resource_id, on:  [:create, :update]
   validate :check_numericality, on:  [:create, :update], if: :is_studytype?
   validate :end_date_is_after_start_date, on: [:create, :update], if: :is_studytype?
   validate :check_id_presence, on: [:create, :update], if: :request_to_submit?
@@ -151,12 +151,18 @@ class StudyhubResource < ApplicationRecord
     end
   end
 
-  def check_nfdi4health_resource_id_presence
+  def check_related_resource_id
+
     resource_json['ids']&.each_with_index do |id,index|
       if !id['id_id'].blank? && id['id_type'] == 'NFDI4Health'
         errors.add("ids[#{index}]['id_id']".to_sym, 'NFDI4Health ID does not exist.')  if StudyhubResource.where(id: id['id_id'].to_i).empty?
       end
+
+      if id['id_type'] == 'URL' && !validate_url(id['id_id'].strip)
+        errors.add("ids[#{index}]['id_id']".to_sym, 'is not a url.')
+      end
     end
+
   end
 
   def check_role_presence
