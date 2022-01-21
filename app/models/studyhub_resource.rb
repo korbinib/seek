@@ -153,21 +153,25 @@ class StudyhubResource < ApplicationRecord
 
   def check_related_resource_id
 
-    resource_json['ids']&.each_with_index do |id,index|
-      if !id['id_id'].blank? && id['id_type'] == 'NFDI4Health'
-        errors.add("ids[#{index}]['id_id']".to_sym, 'NFDI4Health ID does not exist.')  if StudyhubResource.where(id: id['id_id'].to_i).empty?
-      end
+    return if resource_json.nil?
 
-      if id['id_type'] == 'URL' && !validate_url(id['id_id'].strip)
-        errors.add("ids[#{index}]['id_id']".to_sym, 'is not a url.')
+    resource_json['ids']&.each_with_index do |id,index|
+      unless id['id_id'].blank?
+        if id['id_type'] == 'NFDI4Health'
+          errors.add("ids[#{index}]['id_id']".to_sym, 'NFDI4Health ID does not exist.')  if StudyhubResource.where(id: id['id_id'].to_i).empty?
+        end
+
+        if id['id_type'] == 'URL' && !validate_url(id['id_id'].strip)
+          errors.add("ids[#{index}]['id_id']".to_sym, 'is not a url.')
+        end
       end
     end
-
   end
 
   def check_role_presence
 
     return unless resource_json.has_key?('roles')
+
     if resource_json['roles'].blank?
       errors.add(:base, "Please add at least one resource role for the #{studyhub_resource_type_title}.")
       errors.add("roles[0]['role_type']".to_sym, "can't be blank")
