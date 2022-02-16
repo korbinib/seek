@@ -13,6 +13,8 @@ class Workflow < ApplicationRecord
 
   acts_as_doi_parent(child_accessor: :versions)
 
+  has_edam_annotations
+
   validates :projects, presence: true, projects: { self: true }, unless: Proc.new {Seek::Config.is_virtualliver }
 
   #don't add a dependent=>:destroy, as the content_blob needs to remain to detect future duplicates
@@ -22,7 +24,7 @@ class Workflow < ApplicationRecord
   has_and_belongs_to_many :presentations
   has_and_belongs_to_many :documents
 
-  has_many :workflow_data_files, dependent: :destroy
+  has_many :workflow_data_files, dependent: :destroy, autosave: true
   has_many :data_files, ->{ distinct }, through: :workflow_data_files
 
   accepts_nested_attributes_for :workflow_data_files
