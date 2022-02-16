@@ -488,11 +488,11 @@ SEEK::Application.routes.draw do
         post :create_from_existing
       end
     end
-    resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :collections, only: [:index]
+    resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :collections, :workflows, only: [:index]
   end
 
   resources :presentations, concerns: [:has_content_blobs, :publishable, :has_versions, :asset] do
-    resources :people, :programmes, :projects, :publications, :events, :collections, only: [:index]
+    resources :people, :programmes, :projects, :publications, :events, :collections, :workflows, only: [:index]
   end
 
   resources :models, concerns: [:has_content_blobs, :publishable, :has_doi, :has_versions, :asset] do
@@ -531,6 +531,7 @@ SEEK::Application.routes.draw do
       get :provide_metadata
       post :metadata_extraction_ajax
       post :create_metadata
+      get :filter
     end
     member do
       get :diagram
@@ -538,7 +539,7 @@ SEEK::Application.routes.draw do
       get :new_version
       post :create_version_metadata
     end
-    resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :sops, :collections, only: [:index]
+    resources :people, :programmes, :projects, :investigations, :assays, :samples, :studies, :publications, :events, :sops, :collections, :presentations, :documents, :data_files, only: [:index]
   end
 
   resources :workflow_classes, except: [:show]
@@ -697,7 +698,7 @@ SEEK::Application.routes.draw do
   ### DOCUMENTS
 
   resources :documents, concerns: [:has_content_blobs, :publishable, :has_doi, :has_versions, :asset] do
-    resources :people, :programmes, :projects, :programmes, :investigations, :assays, :studies, :publications, :events, :collections, only: [:index]
+    resources :people, :programmes, :projects, :programmes, :investigations, :assays, :studies, :publications, :events, :collections, :workflows, only: [:index]
   end
 
   resources :collections, concerns: [:publishable, :has_doi, :asset] do
