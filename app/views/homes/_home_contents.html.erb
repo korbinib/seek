@@ -15,6 +15,7 @@
     <% if Seek::Config.home_description_position == 'middle' && home_description_text.present? %>
       <%= render partial: 'gadgets/home_description_gadget' %>
     <% end %>
+    <%= render partial: 'home_workflowhub_buttons' %>
     <% if logged_in_and_registered? && Seek::Config.home_show_my_items%>
       <%= render :partial=>"home_my_items" -%>
     <% end %>
