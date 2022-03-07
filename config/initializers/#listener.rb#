@@ -1,0 +1,79 @@
+require 'listen'
+
+require 'rdf/turtle'
+
+require 'sparql'
+
+puts 'Hello from listener'
+
+PREFIXES = "PREFIX schema: <http://schema.org/>
+g.bind('void' , URIRef('http://m-unlock.nl/ontology/'))
+g.bind('unlock', URIRef('http://m-unlock.nl/ontology/'))
+g.bind('mixs' , URIRef('https://w3id.org/gensc.org/terms/'))
+g.bind('owl'  , URIRef('http://www.w3.org/2002/07/owl#'))
+g.bind('jerm' , URIRef('http://jermontology.org/ontology/JERMOntology#'))
+g.bind('xsd'  , URIRef('http://www.w3.org/2001/XMLSchema#'))
+g.bind('dcmitype', URIRef('http://purl.org/dc/dcmitype/'))
+g.bind('rdfs' , URIRef('http://www.w3.org/2000/01/rdf-schema#'))
+g.bind('MIXS' , URIRef('https://w3id.org/gensc.org/terms/'))
+g.bind('rdf'  , URIRef('http://www.w3.org/1999/02/22-rdf-syntax-ns#'))
+g.bind('empusa', URIRef('http://empusa.org/0.1/'))
+g.bind('xml'  , URIRef('http://www.w3.org/XML/1998/namespace'))
+g.bind('bibo' , URIRef('http://purl.org/ontology/bibo/'))
+g.bind('prov' , URIRef('http://www.w3.org/ns/prov#'))
+g.bind('foaf' , URIRef('http://xmlns.com/foaf/0.1/'))
+g.bind('ppeo' , URIRef('http://purl.org/ppeo/PPEO.owl#'))
+g.bind('dc'   , URIRef('http://purl.org/dc/terms/'))
+g.bind('wv'   , URIRef('http://vocab.org/waiver/terms/norms'))
+g.bind('base' , URIRef('http://unlock-icat.irods.surfsara.nl/'))
+"
+
+def ending(s)
+  s.split('/').last.split('#').last
+end
+
+def handle_project(g)
+  User.authenticate('alson', 'alsonsnoop')
+  
+  q = "#{PREFIXES}
+      SELECT * WHERE { ?x rdf:type jerm:Project }"
+
+  search_solutions = SPARQL.execute(q, g)
+    
+  search_solutions.each do |single_project|
+
+    project_hash = {}
+    project_hash[:id] = single_project[:x].value
+
+    q = "#{PREFIXES}
+            SELECT * WHERE { <#{project_hash[:id]}> ?p ?o }"
+    solutions = SPARQL.execute(q, g)
+
+    solutions.each do |s|
+      project_hash[ending(s[:p].value)] = ending(s[:o].value)
+    end
+
+    project = Project.new()
+    project.programme = Programme.find(1)
+    project.title = project_hash["title"]
+    project.description = project_hash["description"]
+    puts User.admin_logged_in?
+    puts project.to_s
+    begin
+      project.save
+    rescue Exception => e
+      puts e.message
+    end
+    puts project_hash
+  end
+end  
+
+listener = Listen.to('/tmp/services') do |modified, added, removed|
+  added.each do |m|
+    r = RDF::Turtle::Reader.open(m)
+    g = RDF::Graph.new << r
+    handle_project(g)
+  end
+end
+
+listener.start

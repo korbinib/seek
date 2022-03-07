@@ -48,6 +48,10 @@ class Investigation < ApplicationRecord
     studies.order(position: :asc)
   end
   
+  def purge
+    puts('Hello')
+  end
+  
   def self.user_creatable?
     Seek::Config.investigations_enabled
   end

@@ -74,6 +74,24 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def purge
+    @project = Project.find(params[:id]) if params[:id]
+    begin
+      @project.purge
+    rescue TypeError
+      flash[:error] = "Failed to purge"
+      respond_to do |format|
+        format.html { redirect_to(@project) }
+      end
+    else
+      flash[:error] = "Purged project"
+      respond_to do |format|
+        format.html { redirect_to :root }
+      end
+    end
+
+  end
+  
   def administer_join_request
     details = @message_log.parsed_details
     @comments = details.comments

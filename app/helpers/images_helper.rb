@@ -98,6 +98,25 @@ module ImagesHelper
     end
   end
 
+  def purge_icon(model_item, user, confirm_msg='Are you sure?')
+    item_name = text_for_resource model_item
+    if model_item.can_manage?(user)
+      fullURL = url_for(model_item)
+
+      ## Add return path if available
+      fullURL = polymorphic_url(model_item,:return_to=>URI(request.referer).path) if request.referer
+
+      html = content_tag(:li) do
+        image_tag_for_key('destroy', fullURL, "Purge #{item_name}", { data: { confirm: confirm_msg }, method: :purge}, "{Purge #{item_name}")
+      end
+      html.html_safe
+#    elsif model_item.can_manage?(user)
+#      explanation = unable_to_delete_text model_item
+#      html = "<li><span class='disabled_icon disabled' onclick='javascript:alert(\"#{explanation}\")' data-tooltip='#{tooltip(explanation)}' >" + image('destroy', alt: 'Delete', class: 'disabled') + " Delete #{item_name} </span></li>"
+#      html.html_safe
+    end
+  end
+
   def file_type_icon(item)
     url = file_type_icon_url(item)
     image_tag url, class: 'icon'

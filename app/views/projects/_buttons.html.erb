@@ -44,6 +44,7 @@
       <li><%= image_tag_for_key('order', order_investigations_project_path(item), "Order #{t('investigation').pluralize}", nil, "Order #{t('investigation').pluralize}") -%></li>
     <% if admin_logged_in? || item.can_manage? -%>
       <%= delete_icon(item,current_user,"Any members will also be removed from the #{t('project')}, are you sure?") %>
+      <li><%= image_tag_for_key('order', purge_project_path(item), "Purge #{t('project')}", nil, "Purge #{t('project')}") -%></li>
     <% end -%>
   <% end -%>
 <% end -%>

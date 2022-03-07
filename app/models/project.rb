@@ -181,6 +181,26 @@ class Project < ApplicationRecord
     settings.set('nels_enabled', !(checkbox_value == '0' || !checkbox_value))
   end
 
+  def purge
+    investigations.each do |i|
+      if i.projects.size > 1
+        i.projects -= [self]
+      else
+        i.purge
+      end
+    end
+    assets.each do |a|
+      if a.projects.size > 1
+        puts 'Trying to remove from project'
+        puts self
+        a.projects -= [self]
+      else
+        puts 'Trying to destroy'
+        a.destroy
+      end
+    end
+  end
+  
   # indicates whether this project has a person, or associated user, as a member
   def has_member?(user_or_person)
     user_or_person = user_or_person.try(:person)
