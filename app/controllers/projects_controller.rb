@@ -76,20 +76,21 @@ class ProjectsController < ApplicationController
 
   def purge
     @project = Project.find(params[:id]) if params[:id]
-    begin
+    ActiveRecord::Base.transaction do
       @project.purge
-    rescue TypeError
-      flash[:error] = "Failed to purge"
-      respond_to do |format|
-        format.html { redirect_to(@project) }
-      end
-    else
-      flash[:error] = "Purged project"
-      respond_to do |format|
-        format.html { redirect_to :root }
+      if @project.errors.empty?
+        flash[:error] = "Purged project"
+        respond_to do |format|
+          format.html { redirect_to :root }
+        end
+      else
+        puts 'Before rollback'
+#        raise ActiveRecord::Rollback
+        respond_to do |format|
+          format.html { redirect_to :root }
+        end
       end
     end
-
   end
   
   def administer_join_request

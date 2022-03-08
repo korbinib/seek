@@ -49,7 +49,11 @@ class Investigation < ApplicationRecord
   end
   
   def purge
-    puts('Hello')
+    studies.each do |s|
+      s.purge
+      self.errors.merge! (s.errors)
+    end
+    self.destroy
   end
   
   def self.user_creatable?

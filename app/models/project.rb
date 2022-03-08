@@ -187,6 +187,7 @@ class Project < ApplicationRecord
         i.projects -= [self]
       else
         i.purge
+        self.errors.merge! (i.errors)
       end
     end
     assets.each do |a|
@@ -197,8 +198,10 @@ class Project < ApplicationRecord
       else
         puts 'Trying to destroy'
         a.destroy
+        self.errors.merge! a.errors
       end
     end
+    self.destroy
   end
   
   # indicates whether this project has a person, or associated user, as a member

@@ -67,6 +67,14 @@ class Study < ApplicationRecord
     assays.order(position: :asc)
   end
   
+  def purge
+    assays.each do |a|
+      a.purge
+      self.errors.merge! a.errors
+    end
+    self.destroy
+  end
+  
   def self.user_creatable?
     Seek::Config.studies_enabled
   end
