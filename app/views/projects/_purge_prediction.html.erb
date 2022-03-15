@@ -1,0 +1,17 @@
+<% if prediction[:blocked].empty? %>
+<p>Can purge</p>
+<% ok_projects = prediction[:ok].find_all { |x| x.is_a? Project } %>
+<%= ok_projects -%>
+<% the_hash = related_items_hash ({'Project' => ok_projects }) %>
+  <%= tab_pane('related-items') do %>
+<%= render :partial => "assets/resource_listing_tabbed_by_class",
+           :locals => {:resource_hash => the_hash },
+           :narrow_view => true,
+           :item => project,
+           :actions_partial_disable => false -%>
+<% end %>
+  <% end %>
+
+<script>
+  displayTabs();
+</script>

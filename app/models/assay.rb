@@ -237,10 +237,6 @@ class Assay < ApplicationRecord
     set_assay_assets_for('DataFile', attributes)
   end
 
-  def purge
-    self.destroy
-  end
-  
   def self.filter_by_projects(projects)
     joins(:projects).where(studies: { investigations: { investigations_projects: { project_id: projects } } })
   end

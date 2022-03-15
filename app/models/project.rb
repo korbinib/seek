@@ -181,27 +181,35 @@ class Project < ApplicationRecord
     settings.set('nels_enabled', !(checkbox_value == '0' || !checkbox_value))
   end
 
-  def purge
+  def check_purge(purge_prediction)
+    blocked_size = purge_prediction[:blocked].size
     investigations.each do |i|
-      if i.projects.size > 1
-        i.projects -= [self]
+      unless i.can_manage?
+        purge_prediction[:blocked] += [i]
       else
-        i.purge
-        self.errors.merge! (i.errors)
+        if i.projects.size > 1
+          purge_prediction[:ok] += [i]
+        else
+          i.check_purge(purge_prediction)
+        end
       end
     end
     assets.each do |a|
-      if a.projects.size > 1
-        puts 'Trying to remove from project'
-        puts self
-        a.projects -= [self]
+      unless a.can_manage?
+        purge_prediction[:blocked] += [a]
       else
-        puts 'Trying to destroy'
-        a.destroy
-        self.errors.merge! a.errors
+        if (a.projects.size > 1) || a.can_delete?
+          purge_prediction[:ok] += [a]
+        else
+          purge_prediction[:blocked] += [a]
+        end
       end
     end
-    self.destroy
+    if purge_prediction[:blocked].size == blocked_size
+      purge_prediction[:ok] += [self]
+    else
+      purge_prediction[:blocked] += [self]
+    end
   end
   
   # indicates whether this project has a person, or associated user, as a member

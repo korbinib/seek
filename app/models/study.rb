@@ -67,12 +67,20 @@ class Study < ApplicationRecord
     assays.order(position: :asc)
   end
   
-  def purge
+  def check_purge(purge_prediction)
+    blocked_size = purge_prediction[:blocked].size
     assays.each do |a|
-      a.purge
-      self.errors.merge! a.errors
+      unless a.can_delete?
+        purge_prediction[:blocked] += [a]
+      else
+        purge_prediction[:ok] += [a]
+      end
     end
-    self.destroy
+    if purge_prediction[:blocked].size == blocked_size
+      purge_prediction[:ok] += [self]
+    else
+      purge_prediction[:blocked] += [self]
+    end
   end
   
   def self.user_creatable?

@@ -48,12 +48,20 @@ class Investigation < ApplicationRecord
     studies.order(position: :asc)
   end
   
-  def purge
+  def check_purge(purge_prediction)
+    blocked_size = purge_prediction[:blocked].size
     studies.each do |s|
-      s.purge
-      self.errors.merge! (s.errors)
+      unless s.can_manage?
+        purge_prediction[:blocked] += [s]
+      else
+        s.check_purge(purge_prediction)
+      end
     end
-    self.destroy
+    if purge_prediction[:blocked].size == blocked_size
+      purge_prediction[:ok] += [self]
+    else
+      purge_prediction[:blocked] += [self]
+    end
   end
   
   def self.user_creatable?

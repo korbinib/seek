@@ -76,19 +76,13 @@ class ProjectsController < ApplicationController
 
   def purge
     @project = Project.find(params[:id]) if params[:id]
-    ActiveRecord::Base.transaction do
-      @project.purge
-      if @project.errors.empty?
-        flash[:error] = "Purged project"
-        respond_to do |format|
-          format.html { redirect_to :root }
-        end
-      else
-        puts 'Before rollback'
-#        raise ActiveRecord::Rollback
-        respond_to do |format|
-          format.html { redirect_to :root }
-        end
+    purge_prediction = {:ok => [], :blocked => []}
+    @project.check_purge(purge_prediction)
+    puts purge_prediction
+    respond_to do |format|
+      format.html do
+        render partial: 'projects/purge_prediction',
+               locals: { project: @project, prediction: purge_prediction }
       end
     end
   end
@@ -288,6 +282,7 @@ class ProjectsController < ApplicationController
       format.rdf { render template: 'rdf/show' }
       format.xml
       format.json { render json: @project, include: [params[:include]] }
+
     end
   end
 
