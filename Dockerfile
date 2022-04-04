@@ -1,4 +1,4 @@
-FROM ruby:2.6-buster
+FROM ruby:2.7-buster
 
 LABEL maintainer="Stuart Owen <orcid.org/0000-0003-2130-0865>, Finn Bacall"
 
@@ -83,6 +83,6 @@ USER www-data
 EXPOSE 3000
 
 # Shared
-VOLUME ["/seek/filestore", "/seek/sqlite3-db", "/seek/tmp/cache"]
+VOLUME ["/seek/filestore", "/seek/sqlite3-db", "/seek/tmp/cache", "/seek/public/assets"]
 
 CMD ["docker/entrypoint.sh"]

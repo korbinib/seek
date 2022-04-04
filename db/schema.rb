@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_12_09_112856) do
+ActiveRecord::Schema.define(version: 2021_12_23_165143) do
 
   create_table "activity_logs", force: :cascade do |t|
     t.string "action"
@@ -110,6 +110,13 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.index ["user_id"], name: "index_api_tokens_on_user_id"
   end
 
+  create_table "application_status", force: :cascade do |t|
+    t.integer "running_jobs"
+    t.boolean "soffice_running"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "assay_assets", force: :cascade do |t|
     t.integer "assay_id"
     t.integer "asset_id"
@@ -183,6 +190,7 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.text "other_creators"
     t.string "deleted_contributor"
     t.integer "sample_type_id"
+    t.integer "position"
     t.index ["sample_type_id"], name: "index_assays_on_sample_type_id"
   end
 
@@ -225,6 +233,11 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.string "asset_type"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer "pos", default: 0
+    t.string "family_name"
+    t.string "given_name"
+    t.string "orcid"
+    t.text "affiliation"
     t.index ["asset_id", "asset_type"], name: "index_assets_creators_on_asset_id_and_asset_type"
   end
 
@@ -373,6 +386,7 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.string "title"
     t.bigint "sample_controlled_vocab_id"
     t.text "description"
+    t.string "label"
     t.index ["custom_metadata_type_id"], name: "index_custom_metadata_attributes_on_custom_metadata_type_id"
     t.index ["sample_attribute_type_id"], name: "index_custom_metadata_attributes_on_sample_attribute_type_id"
     t.index ["sample_controlled_vocab_id"], name: "index_custom_metadata_attributes_on_sample_controlled_vocab_id"
@@ -562,8 +576,8 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
   end
 
   create_table "documents_workflows", id: false, force: :cascade do |t|
-    t.integer "workflow_id", null: false
-    t.integer "document_id", null: false
+    t.bigint "workflow_id", null: false
+    t.bigint "document_id", null: false
     t.index ["document_id", "workflow_id"], name: "index_documents_workflows_on_doc_workflow"
     t.index ["workflow_id", "document_id"], name: "index_documents_workflows_on_workflow_doc"
   end
@@ -867,6 +881,7 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.integer "contributor_id"
     t.text "other_creators"
     t.string "deleted_contributor"
+    t.integer "position"
   end
 
   create_table "investigations_projects", id: false, force: :cascade do |t|
@@ -1176,6 +1191,36 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.index ["user_id"], name: "index_oauth_sessions_on_user_id"
   end
 
+  create_table "observed_variable_sets", force: :cascade do |t|
+    t.string "title"
+    t.integer "contributor_id"
+    t.string "project_ids"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "observed_variables", force: :cascade do |t|
+    t.integer "observed_variable_set_id"
+    t.string "variable_id"
+    t.string "variable_name"
+    t.string "variable_an"
+    t.string "trait"
+    t.string "trait_an"
+    t.string "trait_entity"
+    t.string "trait_entity_an"
+    t.string "trait_attribute"
+    t.string "trait_attribute_an"
+    t.string "method"
+    t.string "method_an"
+    t.text "method_description"
+    t.string "method_reference"
+    t.string "scale"
+    t.string "scale_an"
+    t.string "timescale"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "openbis_endpoints", force: :cascade do |t|
     t.string "as_endpoint"
     t.string "space_perm_id"
@@ -1192,6 +1237,7 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.text "meta_config_json"
     t.datetime "last_sync"
     t.datetime "last_cache_refresh"
+    t.boolean "is_test", default: false
   end
 
   create_table "organisms", force: :cascade do |t|
@@ -1315,8 +1361,8 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
   end
 
   create_table "presentations_workflows", id: false, force: :cascade do |t|
-    t.integer "workflow_id", null: false
-    t.integer "presentation_id", null: false
+    t.bigint "workflow_id", null: false
+    t.bigint "presentation_id", null: false
     t.index ["presentation_id", "workflow_id"], name: "index_presentations_workflows_on_pres_workflow"
     t.index ["workflow_id", "presentation_id"], name: "index_presentations_workflows_on_workflow_pres"
   end
@@ -1398,6 +1444,11 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.date "end_date"
   end
 
+  create_table "projects_publication_versions", id: false, force: :cascade do |t|
+    t.integer "project_id"
+    t.integer "version_id"
+  end
+
   create_table "projects_publications", id: false, force: :cascade do |t|
     t.integer "project_id"
     t.integer "publication_id"
@@ -1471,6 +1522,36 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "publication_versions", force: :cascade do |t|
+    t.integer "publication_id"
+    t.integer "version"
+    t.text "revision_comments"
+    t.integer "pubmed_id"
+    t.text "title"
+    t.text "abstract"
+    t.date "published_date"
+    t.string "journal"
+    t.string "first_letter", limit: 1
+    t.integer "contributor_id"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.datetime "last_used_at"
+    t.string "doi"
+    t.string "uuid"
+    t.integer "policy_id"
+    t.text "citation"
+    t.string "deleted_contributor"
+    t.integer "registered_mode"
+    t.text "booktitle"
+    t.string "publisher"
+    t.text "editor"
+    t.integer "publication_type_id"
+    t.text "url"
+    t.integer "visibility"
+    t.index ["contributor_id"], name: "index_publication_versions_on_contributor"
+    t.index ["publication_id"], name: "index_publication_versions_on_publication_id"
+  end
+
   create_table "publications", force: :cascade do |t|
     t.integer "pubmed_id"
     t.text "title"
@@ -1493,6 +1574,9 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.text "editor"
     t.integer "publication_type_id"
     t.text "url"
+    t.integer "version", default: 1
+    t.string "license"
+    t.text "other_creators"
     t.index ["contributor_id"], name: "index_publications_on_contributor"
   end
 
@@ -1586,6 +1670,8 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.string "original_accessor_name"
     t.integer "sample_controlled_vocab_id"
     t.integer "linked_sample_type_id"
+    t.string "pid"
+    t.text "description"
     t.index ["sample_type_id"], name: "index_sample_attributes_on_sample_type_id"
     t.index ["unit_id"], name: "index_sample_attributes_on_unit_id"
   end
@@ -1622,6 +1708,7 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.boolean "required"
     t.string "short_name"
     t.integer "repository_standard_id"
+    t.string "key"
   end
 
   create_table "sample_resource_links", force: :cascade do |t|
@@ -1870,7 +1957,6 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.integer "investigation_id"
     t.text "experimentalists"
     t.datetime "begin_date"
-    t.integer "person_responsible_id"
     t.datetime "created_at"
     t.datetime "updated_at"
     t.string "first_letter", limit: 1
@@ -1879,6 +1965,7 @@ ActiveRecord::Schema.define(version: 2021_12_09_112856) do
     t.integer "contributor_id"
     t.text "other_creators"
     t.string "deleted_contributor"
+    t.integer "position"
   end
 
   create_table "study_auth_lookup", force: :cascade do |t|
