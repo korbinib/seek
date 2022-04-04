@@ -3881,13 +3881,12 @@ class DataFilesControllerTest < ActionController::TestCase
   end
 
   test 'can fetch datacite metadata' do
-    someone = Factory(:person, first_name: 'Jane', last_name: 'Bloggs')
     thing = Factory(:data_file, policy: Factory(:public_policy),
                     title: 'The title',
                     description: 'The description',
-                    creators: [someone],
-                    contributor: Factory(:person, first_name: 'Joe', last_name: 'Bloggs', orcid: 'https://orcid.org/0000-0002-1694-233X')
-    ).latest_version
+                    contributor: Factory(:person, first_name: 'Joe', last_name: 'Bloggs')).latest_version
+
+    thing.assets_creators.create!(given_name: 'Jane', family_name: 'Bloggs', orcid: 'https://orcid.org/0000-0002-1694-233X')
 
     get :show, params: { id: thing.parent.id, version: thing.version, format: :datacite_xml }
 
@@ -3899,17 +3898,16 @@ class DataFilesControllerTest < ActionController::TestCase
     resource =  parsed.xpath('//xmlns:resource').first
     assert_equal 'The title', resource.xpath('./xmlns:titles/xmlns:title').first.text
     assert_equal 'The description', resource.xpath('./xmlns:descriptions/xmlns:description').first.text
-    assert_equal 2, resource.xpath('./xmlns:creators/xmlns:creator').length
+    assert_equal 1, resource.xpath('./xmlns:creators/xmlns:creator').length
     joe = parsed.xpath("//xmlns:resource/xmlns:creators/xmlns:creator[xmlns:creatorName/text()='Bloggs, Joe']").first
     jane = parsed.xpath("//xmlns:resource/xmlns:creators/xmlns:creator[xmlns:creatorName/text()='Bloggs, Jane']").first
-    assert_equal 'Bloggs, Joe', joe.xpath('./xmlns:creatorName').first.text
-    assert_equal 'https://orcid.org/0000-0002-1694-233X', joe.xpath('./xmlns:nameIdentifier').first.text
+    assert_nil joe
     assert_equal 'Bloggs, Jane', jane.xpath('./xmlns:creatorName').first.text
-    assert_nil jane.xpath('./xmlns:nameIdentifier').first
+    assert_equal 'https://orcid.org/0000-0002-1694-233X', jane.xpath('./xmlns:nameIdentifier').first.text
     assert_equal 'ORCID', resource.xpath('./xmlns:creators/xmlns:creator/xmlns:nameIdentifier/@nameIdentifierScheme').first.text
     assert_equal 'https://orcid.org', resource.xpath('./xmlns:creators/xmlns:creator/xmlns:nameIdentifier/@schemeURI').first.text
     assert_equal thing.created_at.year.to_s, resource.xpath('./xmlns:publicationYear').first.text
-    assert_equal Seek::Config.project_name, resource.xpath('./xmlns:publisher').first.text
+    assert_equal Seek::Config.instance_name, resource.xpath('./xmlns:publisher').first.text
     assert_equal 'Dataset', resource.xpath('./xmlns:resourceType').first.text
     assert_equal 'Dataset', resource.xpath('./xmlns:resourceType/@resourceTypeGeneral').first.text
   end
