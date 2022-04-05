@@ -5,13 +5,6 @@ GIT
     bioportal (3.0)
 
 GIT
-  remote: https://github.com/SysMO-DB/convert_office.git
-  revision: 753f2567dbd625bc89071e1150404efbb562e130
-  ref: 753f2567dbd625bc89071e1150404efbb562e130
-  specs:
-    convert_office (0.9.1)
-
-GIT
   remote: https://github.com/SysMO-DB/fleximage.git
   revision: bb1182f2716a9bf1b5d85e186d8bb7eec436797b
   ref: bb1182f2716a9bf1b5d85e186d8bb7eec436797b
@@ -102,7 +95,7 @@ GEM
       activerecord (>= 3.0)
     acts_as_tree (2.6.1)
       activerecord (>= 3.0.0)
-    addressable (2.7.0)
+    addressable (2.8.0)
       public_suffix (>= 2.0.2, < 5.0)
     aes_key_wrap (1.1.0)
     akami (1.2.2)
@@ -279,7 +272,7 @@ GEM
       thor (>= 0.14, < 2.0)
     jquery-ui-rails (6.0.1)
       railties (>= 3.2.16)
-    json (2.5.1)
+    json (2.3.1)
     json-diff (0.4.1)
     json-jwt (1.13.0)
       activesupport (>= 4.2)
@@ -304,6 +297,7 @@ GEM
       rdf-xsd (>= 2.2, < 4.0)
       sparql (>= 2.2, < 4.0)
       sxp (~> 1.0)
+    libreconv (0.9.5)
     libxml-ruby (2.9.0)
     link_header (0.0.8)
     linkeddata (3.0.1)
@@ -613,12 +607,12 @@ GEM
     rexml (3.2.5)
     rfc-822 (0.4.1)
     rmagick (2.15.2)
-    ro-bundle (0.2.5)
-      addressable (~> 2.7.0)
-      json (>= 2.3.0)
+    ro-bundle (0.3.0)
+      addressable (~> 2.8.0)
+      json (~> 2.3.0)
       ucf (~> 2.0.2)
       uuid (~> 2.3)
-    ro-crate (0.4.15)
+    ro-crate (0.4.16)
       addressable (>= 2.7, < 2.9)
       rubyzip (~> 2.0.0)
     rsolr (2.3.0)
@@ -809,7 +803,7 @@ DEPENDENCIES
   acts-as-taggable-on
   acts_as_list
   acts_as_tree
-  addressable (~> 2.7.0)
+  addressable (~> 2.8.0)
   attr_encrypted (~> 3.0.0)
   auto_strip_attributes
   better_errors
@@ -824,7 +818,6 @@ DEPENDENCIES
   citeproc-ruby (~> 2.0.0)
   coffee-rails (~> 4.2)
   commonmarker
-  convert_office!
   country_select
   csl-styles (~> 2.0.0)
   daemons
@@ -853,6 +846,7 @@ DEPENDENCIES
   jquery-ui-rails
   json-diff
   json-schema
+  libreconv
   libxml-ruby (~> 2.9.0)
   linkeddata
   lograge
@@ -902,8 +896,8 @@ DEPENDENCIES
   rest-client (~> 2.0)
   rfc-822
   rmagick (= 2.15.2)
-  ro-bundle (~> 0.2.5)
-  ro-crate (~> 0.4.14)
+  ro-bundle (~> 0.3.0)
+  ro-crate (~> 0.4.16)
   rspec-rails (~> 3.6)
   rubocop
   ruby-prof

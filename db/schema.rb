@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2021_12_23_165143) do
+ActiveRecord::Schema.define(version: 2022_03_08_102056) do
 
   create_table "activity_logs", force: :cascade do |t|
     t.string "action"
@@ -112,7 +112,6 @@ ActiveRecord::Schema.define(version: 2021_12_23_165143) do
 
   create_table "application_status", force: :cascade do |t|
     t.integer "running_jobs"
-    t.boolean "soffice_running"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

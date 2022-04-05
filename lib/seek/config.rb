@@ -99,7 +99,7 @@ module Seek
         SEEK::Application.config.middleware.use ExceptionNotification::Rack,
                                                 email: {
                                                   sender_address: [noreply_sender],
-                                                  email_prefix: "[ #{application_name} ERROR ] ",
+                                                  email_prefix: "[ #{instance_name} ERROR ] ",
                                                   exception_recipients: exception_notification_recipients.nil? ? [] : exception_notification_recipients.split(/[, ]/)
                                                 }
       else
@@ -284,18 +284,6 @@ module Seek
       end
     end
 
-    def soffice_available?(cached=false)
-      @@soffice_available = nil unless cached
-      begin
-        port = ConvertOffice::ConvertOfficeConfig.options[:soffice_port]
-        soc = TCPSocket.new('localhost', port)
-        soc.close
-        true
-      rescue
-        false
-      end
-    end
-
     def studies_enabled
       isa_enabled
     end
@@ -424,7 +412,7 @@ module Seek
     # transfers a setting value from the old_name to the new_name setting value, for use when renaming a setting.
     # Creates a new record for the new setting (if set), and cleans up and removes the old record. Ignores any defaults that are set
     def transfer_value(old_name, new_name)
-      if old_value = Settings.global.get(:old_name)
+      if old_value = Settings.global.get(old_name)
         set_value(new_name,old_value)
         Settings.destroy(old_name)
       end
