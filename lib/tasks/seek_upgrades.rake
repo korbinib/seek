@@ -16,6 +16,7 @@ namespace :seek do
     create_seek_sample_multi
     rename_seek_sample_attribute_types
     update_thesis_related_publication_types
+    strip_site_base_host_path
     seek:rebuild_workflow_internals
   ]
 
@@ -134,7 +135,6 @@ namespace :seek do
     end
   end
 
-
   task(update_thesis_related_publication_types: [:environment]) do
     puts 'Updating publication types ...'
 
@@ -157,7 +157,13 @@ namespace :seek do
       PublicationType.find_or_initialize_by(key: "diplomthesis").update(title:"Diplom Thesis", key: "diplomthesis")
       puts 'Add new type '+PublicationType.find_by(key:"diplomthesis").title
     end
-
   end
 
+  task(strip_site_base_host_path: [:environment]) do
+    if Seek::Config.site_base_host
+      u = URI.parse(Seek::Config.site_base_host)
+      u.path = ''
+      Seek::Config.site_base_host = u.to_s
+    end
+  end
 end
