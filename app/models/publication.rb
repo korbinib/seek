@@ -128,6 +128,7 @@ class Publication < ApplicationRecord
   def doi_uri
     "https://doi.org/#{doi}" if doi
   end
+  alias_method :doi_identifier, :doi_uri
 
   # Automatically extract the actual DOI if the user put in the full URL
   def doi=(doi)
