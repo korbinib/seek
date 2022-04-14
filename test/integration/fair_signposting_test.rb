@@ -59,7 +59,7 @@ class FairSignpostingTest < ActionDispatch::IntegrationTest
     assert_response :success
     links = parse_link_header
     assert_equal 2, links.size
-    assert_link(links, 'https://doi.org/10.5075/abcd', rel: 'cite-as')
+    assert_link(links, 'https://doi.org/10.5072/abcd', rel: 'cite-as')
     assert_link(links, publication_url(pub, version: 1), rel: 'describedby', type: :rdf)
   end
 
