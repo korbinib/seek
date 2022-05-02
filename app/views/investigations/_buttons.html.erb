@@ -11,9 +11,6 @@
 <%= item_actions_dropdown do %>
     <% if item.can_edit? %>
       <li><%= image_tag_for_key('edit', edit_investigation_path(item), "Edit #{t('investigation')}", nil, "Edit #{t('investigation')}") -%></li>
-      <% if item.studies.size > 1  && item.can_order? %>
-        <li><%= image_tag_for_key('order', order_studies_investigation_path(item), "Order #{t('study').pluralize}", nil, "Order #{t('study').pluralize}") -%></li>
-      <% end %>
     <% end %>
 
     <% if item.can_manage? -%>
@@ -25,5 +22,6 @@
         <li><%= image_tag_for_key('publish', polymorphic_path(item, :action => :check_related_items), nil, {:method=>:post}, "Publish full #{t('investigation')}") -%></li>
     <% end -%>
 
+    <%= order_icon(item,current_user, order_studies_investigation_path(item), item.studies, 'study') -%>
     <%= delete_icon item,current_user -%>
 <% end -%>
