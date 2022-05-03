@@ -101,8 +101,8 @@ module ImagesHelper
   def order_icon(model_item, user, full_url, subitems, subitem_name)
     item_name = text_for_resource model_item
     explanation = ""
-    if !model_item.can_manage?(user)
-      explanation = "You cannot manage this #{item_name}"
+    if !model_item.can_edit?(user)
+      explanation = "You cannot edit this #{item_name}"
     elsif subitems.size < 2
       explanation = "The #{item_name} must contain two or more #{subitem_name.pluralize}"
     elsif !model_item.can_order?(user)

@@ -69,7 +69,7 @@ class Study < ApplicationRecord
   
   def can_order?(user = User.current_user)
     user && can_edit?(user) &&
-      !assays.find { |a| !a.can_manage?(user) }
+      !assays.find { |a| !a.can_edit?(user) }
   end
 
   def self.user_creatable?

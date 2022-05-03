@@ -50,7 +50,7 @@ class Investigation < ApplicationRecord
   
   def can_order?(user = User.current_user)
     user && can_edit?(user) &&
-      !studies.find { |s| !s.can_manage?(user) }
+      !studies.find { |s| !s.can_edit?(user) }
   end
 
   def self.user_creatable?

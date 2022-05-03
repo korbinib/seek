@@ -242,7 +242,7 @@ class Project < ApplicationRecord
 
   def can_order?(user = User.current_user)
     user && can_edit?(user) &&
-      !investigations.find { |i| !i.can_manage?(user) }
+      !investigations.find { |i| !i.can_edit?(user) }
   end
 
   def can_delete?(user = User.current_user)
