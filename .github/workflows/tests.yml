@@ -101,8 +101,8 @@ jobs:
         run: |
           git fetch origin ${{ github.event.before }}
           git checkout ${{ github.event.before }} -- db/schema.rb
-      - name: Load test database schema
-        run: bundle exec rake db:schema:load
+      - name: Prepare test database
+        run: bundle exec rake db:test:prepare
       - name: Seed database
         if: matrix.suite == 'rake seek:upgrade'
         run: bundle exec rake db:seed
