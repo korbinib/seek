@@ -16,7 +16,7 @@ admin_user.save!
 admin_user.person.work_groups << workgroup
 admin_person = admin_user.person
 admin_person.save
-puts 'Seeded 1 admin.'
+Rails.logger.info 'Seeded 1 admin.'
 
 guest_user = User.where(login: 'guest').first_or_create(
   login: 'guest',
@@ -29,7 +29,7 @@ guest_user.save!
 guest_user.person.work_groups << workgroup
 guest_person = guest_user.person
 guest_person.save
-puts 'Seeded 1 guest.'
+Rails.logger.info 'Seeded 1 guest.'
 
 # ISA
 investigation = Investigation.new(title: 'Central Carbon Metabolism of Sulfolobus solfataricus',
@@ -38,14 +38,14 @@ investigation.projects = [project]
 investigation.contributor = guest_user
 investigation.policy = Policy.create(name: 'default policy', access_type: 1)
 investigation.save
-puts 'Seeded 1 investigation.'
+Rails.logger.info 'Seeded 1 investigation.'
 
 study = Study.new(title: 'Carbon loss at high T')
 study.contributor = guest_user
 study.policy = Policy.create(name: 'default policy', access_type: 1)
 study.investigation = investigation
 study.save
-puts 'Seeded 1 study.'
+Rails.logger.info 'Seeded 1 study.'
 
 exp_assay = Assay.new(title: 'Reconstituted system reference state',
                       description: 'The four purified enzymes were incubated in assay buffer and consumption of 3PG and production of F6P were measured in time, together with GAP and DHAP concentrations.')
@@ -54,7 +54,7 @@ exp_assay.policy = Policy.create(name: 'default policy', access_type: 1)
 exp_assay.study = study
 exp_assay.assay_class = AssayClass.first
 exp_assay.save
-puts 'Seeded 1 experimental assay.'
+Rails.logger.info 'Seeded 1 experimental assay.'
 
 model_assay = Assay.new(title: 'Model reconstituted system',
                         description: 'Mathematical model for the reconstituted system with PGK, GAPDH, TPI and FBPAase.')
@@ -63,7 +63,7 @@ model_assay.policy = Policy.create(name: 'default policy', access_type: 1)
 model_assay.study = study
 model_assay.assay_class = AssayClass.last
 model_assay.save
-puts 'Seeded 1 modelling analysis.'
+Rails.logger.info 'Seeded 1 modelling analysis.'
 
 # Assets
 # TODO check filesize
@@ -84,7 +84,7 @@ AssetsCreator.create(asset_id: data_file1.id, creator_id: guest_user.id, asset_t
 # copy file
 FileUtils.cp File.dirname(__FILE__) + '/' + data_file1.content_blob.original_filename, data_file1.content_blob.filepath
 disable_authorization_checks { data_file1.content_blob.save }
-puts 'Seeded data file 1.'
+Rails.logger.info 'Seeded data file 1.'
 
 data_file2 = DataFile.new(title: 'Model simulation and Exp data for reconstituted system',
                           description: 'Experimental data for the reconstituted system are plotted together with the model prediction.')
@@ -103,7 +103,7 @@ AssetsCreator.create(asset_id: data_file2.id, creator_id: guest_user.id, asset_t
 # copy file
 FileUtils.cp File.dirname(__FILE__) + '/' + data_file2.content_blob.original_filename, data_file2.content_blob.filepath
 disable_authorization_checks { data_file2.content_blob.save }
-puts 'Seeded data file 2.'
+Rails.logger.info 'Seeded data file 2.'
 
 # model
 model = Model.new(title: 'Mathematical model for the combined four enzyme system',
@@ -137,7 +137,7 @@ model.content_blobs.each do |blob|
   FileUtils.cp File.dirname(__FILE__) + '/' + blob.original_filename, blob.filepath
   blob.save
 end
-puts 'Seeded 1 model.'
+Rails.logger.info 'Seeded 1 model.'
 
 # sop
 =begin
@@ -155,7 +155,7 @@ disable_authorization_checks {sop.save}
 AssetsCreator.create(asset_id: sop.id, creator_id: guest_user.id, asset_type: sop.class.name)
 #copy file
 FileUtils.cp File.dirname(__FILE__) + '/' + sop.content_blob.original_filename, sop.content_blob.filepath
-puts "Seeded 1 sop."
+Rails.logger.info "Seeded 1 sop."
 =end
 
 # publication
@@ -198,7 +198,7 @@ disable_authorization_checks do
   publication.associate(model_assay)
 end
 AssetsCreator.create(asset_id: publication.id, creator_id: guest_user.id, asset_type: publication.class.name)
-puts 'Seeded 1 publication.'
+Rails.logger.info 'Seeded 1 publication.'
 
 [project, investigation, study, exp_assay, model_assay, data_file1, data_file2, model, publication].each do |item|
   ActivityLog.create(action: 'create',
@@ -223,7 +223,7 @@ Seek::Config.exception_notification_recipients = ['errors@fair-dom.org']
 Seek::Config.datacite_url = 'https://mds.test.datacite.org/'
 Seek::Config.doi_prefix = '10.5072'
 Seek::Config.doi_suffix = 'seek.5'
-puts 'Finish configuration'
-puts 'Please visit admin site for further configuration, e.g. site_base_host, pubmed_api_email, crossref_api_email, bioportal_api_key, email, doi, admin email'
-puts 'Admin account: username admin, password adminadmin. You might want to change admin password.'
-puts 'Then make sure solr, workers are running'
+Rails.logger.info 'Finish configuration'
+Rails.logger.info 'Please visit admin site for further configuration, e.g. site_base_host, pubmed_api_email, crossref_api_email, bioportal_api_key, email, doi, admin email'
+Rails.logger.info 'Admin account: username admin, password adminadmin. You might want to change admin password.'
+Rails.logger.info 'Then make sure solr, workers are running'

@@ -79,7 +79,7 @@ ncbi_type.update(base_type: Seek::Samples::BaseType::STRING, regexp: '[0-9]+', p
 data_file_type = SampleAttributeType.find_or_initialize_by(title: 'Registered Data file')
 data_file_type.update(base_type: Seek::Samples::BaseType::SEEK_DATA_FILE)
 
-puts "Seeded #{SampleAttributeType.count - count} sample attribute types"
+Rails.logger.info "Seeded #{SampleAttributeType.count - count} sample attribute types"
 
 # Sample types
 count = SampleType.count
@@ -117,4 +117,4 @@ disable_authorization_checks do
   )
 end
 
-puts "Seeded #{SampleType.count - count} sample types"
+Rails.logger.info "Seeded #{SampleType.count - count} sample types"

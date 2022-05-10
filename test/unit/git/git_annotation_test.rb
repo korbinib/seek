@@ -2,7 +2,7 @@ require 'test_helper'
 
 class GitAnnotationTest < ActiveSupport::TestCase
   setup do
-    @galaxy_class = WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class)
+    @galaxy_class = WorkflowClass.find_by_key('galaxy')
   end
 
   test 'get and set git annotation' do
@@ -24,7 +24,7 @@ class GitAnnotationTest < ActiveSupport::TestCase
 
     assert_no_difference('Git::Annotation.count') do
       wgv.main_workflow_path = 'Concat_two_files.cwl'
-      wgv.workflow_class_id = (WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class)).id
+      wgv.workflow_class_id = (WorkflowClass.find_by_key('cwl')).id
       disable_authorization_checks { assert wgv.save }
     end
 
@@ -182,7 +182,7 @@ class GitAnnotationTest < ActiveSupport::TestCase
 
     assert_no_difference('Git::Annotation.count') do
       wgv.main_workflow_path = 'Concat_two_files.cwl'
-      wgv.workflow_class_id = (WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class)).id
+      wgv.workflow_class_id = (WorkflowClass.find_by_key('cwl')).id
       wgv.remote_sources = { 'Concat_two_files.cwl' => 'https://workflows.example.com/concat_two_files.cwl' }
       disable_authorization_checks { assert wgv.save }
     end

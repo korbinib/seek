@@ -10,11 +10,11 @@ end
 
 ActiveRecord::FixtureSet.create_fixtures(File.join(Rails.root, "config/default_data"), "culture_growth_types")
 
-puts "Seeded culture growth types"
+Rails.logger.info "Seeded culture growth types"
 
 ActiveRecord::FixtureSet.create_fixtures(File.join(Rails.root, "config/default_data"), "disciplines")
 
-puts "Seeded disciplines"
+Rails.logger.info "Seeded disciplines"
 
 disable_authorization_checks do
   #create policy for strains
@@ -39,15 +39,15 @@ disable_authorization_checks do
   end
 end
 
-puts "Seeded organisms"
+Rails.logger.info "Seeded organisms"
 
 ActiveRecord::FixtureSet.create_fixtures(File.join(Rails.root, "config/default_data"), "recommended_model_environments")
 
-puts "Seeded recommended model environments"
+Rails.logger.info "Seeded recommended model environments"
 
 ActiveRecord::FixtureSet.create_fixtures(File.join(Rails.root, "config/default_data"), "assay_classes")
 
-puts "Seeded assay classes"
+Rails.logger.info "Seeded assay classes"
 
 File.open('config/default_data/expertise.list').each do |item|
   unless item.blank?
@@ -63,4 +63,4 @@ File.open('config/default_data/tools.list').each do |item|
   end
 end
 
-puts "Seeded expertise and tools"
+Rails.logger.info "Seeded expertise and tools"

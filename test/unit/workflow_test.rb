@@ -399,7 +399,7 @@ class WorkflowTest < ActiveSupport::TestCase
 
   test 'adding diagram path clears the cached auto-generated diagram' do
     workflow = Factory(:annotationless_local_git_workflow,
-                       workflow_class: WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class))
+                       workflow_class: WorkflowClass.find_by_key('cwl'))
 
     v = workflow.git_version
     disable_authorization_checks do
@@ -440,7 +440,7 @@ class WorkflowTest < ActiveSupport::TestCase
 
   test 'removing diagram path reverts to the auto-generated diagram' do
     workflow = Factory(:annotationless_local_git_workflow,
-                       workflow_class: WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class))
+                       workflow_class: WorkflowClass.find_by_key('cwl'))
 
     v = workflow.git_version
     disable_authorization_checks do
@@ -481,7 +481,7 @@ class WorkflowTest < ActiveSupport::TestCase
 
   test 'generates RO-Crate for workflow with auto-generated diagram' do
     workflow = Factory(:annotationless_local_git_workflow,
-                       workflow_class: WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class))
+                       workflow_class: WorkflowClass.find_by_key('cwl'))
 
     v = workflow.git_version
     disable_authorization_checks do
@@ -546,9 +546,6 @@ class WorkflowTest < ActiveSupport::TestCase
   end
 
   test 'tags and edam in json api' do
-    Factory(:edam_topics_controlled_vocab)
-    Factory(:edam_operations_controlled_vocab)
-
     user = Factory(:user)
 
     workflow = User.with_current_user(user) do

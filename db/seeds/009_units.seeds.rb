@@ -10,4 +10,4 @@ units.each do |unit|
   unit.update(comment:comment,order:order,title:title)
 end
 
-puts "Seeded units"
+Rails.logger.info "Seeded units"

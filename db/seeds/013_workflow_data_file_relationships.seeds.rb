@@ -7,4 +7,4 @@ classes.each do |key, data|
   disable_authorization_checks { relationship.update!(data) }
 end
 
-puts "Seeded workflow to data file relationships"
+Rails.logger.info "Seeded workflow to data file relationships"

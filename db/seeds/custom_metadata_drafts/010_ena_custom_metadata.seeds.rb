@@ -1,4 +1,4 @@
-puts 'Seeded ENA Metadata'
+Rails.logger.info 'Seeded ENA Metadata'
 
 # Initialisation of aliases for common sample attributes types, for easier use.
 

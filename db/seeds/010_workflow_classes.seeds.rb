@@ -7,4 +7,4 @@ classes.each do |key, data|
   disable_authorization_checks { workflow_class.update!(data) }
 end
 
-puts "Seeded workflow classes"
+Rails.logger.info "Seeded workflow classes"

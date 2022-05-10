@@ -23,4 +23,4 @@ end
 
 seeded_n = PublicationType.count - before_n
 
-puts "Seeded #{seeded_n} publication types" if seeded_n > 0
+Rails.logger.info "Seeded #{seeded_n} publication types" if seeded_n > 0

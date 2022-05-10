@@ -19,9 +19,6 @@ class HasEdamAnnotationsTest < ActiveSupport::TestCase
   end
 
   test 'annotate with label' do
-    Factory(:edam_topics_controlled_vocab)
-    Factory(:edam_operations_controlled_vocab)
-
     refute @workflow.edam_annotations?
 
     # mixture of arrays and comma separated, including an unknown one
@@ -43,9 +40,6 @@ class HasEdamAnnotationsTest < ActiveSupport::TestCase
   end
 
   test 'annotate with iri' do
-    Factory(:edam_topics_controlled_vocab)
-    Factory(:edam_operations_controlled_vocab)
-
     refute @workflow.edam_annotations?
 
     @workflow.edam_topics = ['http://edamontology.org/topic_3314', 'http://edamontology.org/topic_3277']
@@ -66,13 +60,7 @@ class HasEdamAnnotationsTest < ActiveSupport::TestCase
   end
 
   test 'edam vocab present' do
-    refute @workflow.edam_topics_vocab
-    refute @workflow.edam_operations_vocab
-
-    topics_vocab = Factory(:edam_topics_controlled_vocab)
-    operations_vocab = Factory(:edam_operations_controlled_vocab)
-
-    assert_equal topics_vocab, @workflow.edam_topics_vocab
-    assert_equal operations_vocab, @workflow.edam_operations_vocab
+    assert_equal 'edam_topics', @workflow.edam_topics_vocab.key
+    assert_equal 'edam_operations', @workflow.edam_operations_vocab.key
   end
 end

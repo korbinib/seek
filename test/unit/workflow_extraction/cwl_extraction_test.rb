@@ -2,7 +2,7 @@ require 'test_helper'
 
 class CWLExtractionTest < ActiveSupport::TestCase
   setup do
-    @cwl = WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class)
+    @cwl = WorkflowClass.find_by_key('cwl')
   end
 
   test 'extracts metadata from packed CWL' do

@@ -9,7 +9,7 @@ class GitWorkflowCreationTest < ActionDispatch::IntegrationTest
     annotation_count = Git::Annotation.count
 
     person = Factory(:person)
-    galaxy = WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class)
+    galaxy = WorkflowClass.find_by_key('galaxy')
     login_as(person.user)
 
     get new_workflow_path
@@ -93,7 +93,7 @@ class GitWorkflowCreationTest < ActionDispatch::IntegrationTest
     annotation_count = Git::Annotation.count
 
     person = Factory(:person)
-    cwl = WorkflowClass.find_by_key('cwl') || Factory(:cwl_workflow_class)
+    cwl = WorkflowClass.find_by_key('cwl')
     login_as(person.user)
 
     get new_workflow_path
@@ -157,7 +157,7 @@ class GitWorkflowCreationTest < ActionDispatch::IntegrationTest
     annotation_count = Git::Annotation.count
 
     person = Factory(:person)
-    nextflow = WorkflowClass.find_by_key('nextflow') || Factory(:nextflow_workflow_class)
+    nextflow = WorkflowClass.find_by_key('nextflow')
     login_as(person.user)
 
     get new_workflow_path

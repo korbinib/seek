@@ -13,3 +13,7 @@ Rake::Task['db:schema:dump'].enhance do
     puts "Failed to convert schema.rb to db agnostic - #{e.message}"
   end
 end
+
+Rake::Task['db:test:prepare'].enhance do
+  Rake::Task["db:seed"].invoke
+end

@@ -17,4 +17,4 @@ if model_type = ModelType.find_by(title: 'Partial differential equations')
   model_type.update(title: 'Partial differential equations (PDE)')
 end
 
-puts "Seeded #{ModelType.count - count} model types"
+Rails.logger.info "Seeded #{ModelType.count - count} model types"

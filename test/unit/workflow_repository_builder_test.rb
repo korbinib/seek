@@ -2,7 +2,7 @@ require 'test_helper'
 
 class WorkflowRepositoryBuilderTest < ActiveSupport::TestCase
   setup do
-    @galaxy = WorkflowClass.find_by_key('galaxy') || Factory(:galaxy_workflow_class)
+    @galaxy = WorkflowClass.find_by_key('galaxy')
   end
 
   test 'builds local file crate repository' do

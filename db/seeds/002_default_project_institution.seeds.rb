@@ -8,5 +8,5 @@ unless Project.find_by_title('Default Project') && Institution.find_by_title('De
     project.save!
   end
 
-  puts 'Seeded default project'
+  Rails.logger.info 'Seeded default project'
 end
