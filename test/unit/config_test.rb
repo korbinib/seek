@@ -216,26 +216,22 @@ class ConfigTest < ActiveSupport::TestCase
 
   # Project
   test 'project_name' do
-    assert_equal 'Sysmo', Seek::Config.project_name
-  end
-  test 'project_type' do
-    assert_equal 'Consortium', Seek::Config.project_type
-  end
-  test 'project_link' do
-    assert_equal 'http://www.sysmo.net', Seek::Config.project_link
-  end
-  test 'project_long_name' do
-    assert_equal 'Sysmo Consortium', Seek::Config.project_long_name
-  end
-  test 'dm_project_name' do
-    assert_equal 'SysMO-DB', Seek::Config.dm_project_name
+    assert_equal 'Sysmo SEEK', Seek::Config.instance_name
   end
 
-  test 'dm_project_link' do
-    assert_equal 'http://www.sysmo-db.org', Seek::Config.dm_project_link
+  test 'instance_link' do
+    assert_equal 'http://www.sysmo.net', Seek::Config.instance_link
+  end
+
+  test 'instance_admins_name' do
+    assert_equal 'SysMO-DB', Seek::Config.instance_admins_name
+  end
+
+  test 'instance_admins_link' do
+    assert_equal 'http://www.sysmo-db.org', Seek::Config.instance_admins_link
   end
   test 'application_name' do
-    assert_equal 'Sysmo SEEK', Seek::Config.application_name
+    assert_equal 'FAIRDOM-SEEK', Seek::Config.application_name
   end
 
   test 'header_image_enabled' do
@@ -311,6 +307,26 @@ class ConfigTest < ActiveSupport::TestCase
 
     with_config_value(:site_base_host, 'http://localhost') do
       assert_equal 'http', Seek::Config.host_scheme
+    end
+  end
+
+  test 'site_base_url' do
+    with_relative_root(nil) do
+      with_config_value(:site_base_host, 'https://secure.website:443') do
+        assert_equal 'https://secure.website:443/', Seek::Config.site_base_url.to_s
+      end
+    end
+
+    with_config_value(:site_base_host, 'http://somewhere.overtherainbow') do
+      with_relative_root('/seek') do
+        assert_equal 'http://somewhere.overtherainbow/seek/', Seek::Config.site_base_url.to_s
+      end
+    end
+
+    with_config_value(:site_base_host, 'http://localhost') do
+      with_relative_root('/seeks/seek1') do
+        assert_equal 'http://localhost/seeks/seek1/', Seek::Config.site_base_url.to_s
+      end
     end
   end
 
@@ -546,6 +562,69 @@ class ConfigTest < ActiveSupport::TestCase
       assert_equal 'Hash', Seek::Config.smtp.class.name
       Settings.merge!(:smtp, {})
       assert_equal 'ActiveSupport::HashWithIndifferentAccess', Seek::Config.smtp.class.name
+    end
+  end
+
+  test 'transfer_setting' do
+    # old name has a value hanging around
+    Seek::Config.set_value(:old_name, "The INSTANCE name")
+
+    refute_nil Settings.fetch(:old_name)
+    refute_nil Settings.global.fetch(:old_name)
+    assert_equal "The INSTANCE name",Seek::Config.get_value(:old_name)
+    assert_nil Seek::Config.get_value(:new_name)
+
+    Seek::Config.transfer_value(:old_name, :new_name)
+
+    assert_equal "The INSTANCE name",Seek::Config.get_value(:new_name)
+    assert_nil Seek::Config.get_value(:old_name)
+    assert_nil Settings.fetch(:old_name)
+    assert_nil Settings.global.fetch(:old_name)
+
+    # repeatable
+    Seek::Config.transfer_value(:old_name, :new_name)
+
+    assert_equal "The INSTANCE name",Seek::Config.get_value(:new_name)
+    assert_nil Seek::Config.get_value(:old_name)
+    assert_nil Settings.fetch(:old_name)
+    assert_nil Settings.global.fetch(:old_name)
+
+    # don't transfer default if not set
+    Seek::Config.default :old_name_2, 'The setting'
+    assert_equal "The setting",Seek::Config.get_value(:old_name_2)
+    assert_nil Settings.fetch(:old_name_2)
+    assert_nil Settings.global.fetch(:old_name_2)
+
+    Seek::Config.transfer_value(:old_name_2, :new_name_2)
+
+    assert_nil Settings.global.fetch(:old_name_2)
+    assert_nil Settings.global.fetch(:new_name_2)
+    assert_nil Seek::Config.get_value(:new_name_2)
+    assert_nil Seek::Config.get_value(:old_name_2)
+    assert_nil Settings.fetch(:old_name_2)
+    assert_nil Settings.fetch(:new_name_2)
+  end
+
+  test 'elixir AAI config' do
+    with_config_value(:site_base_host, 'https://secure.website:3001') do
+      with_config_value(:omniauth_elixir_aai_client_id, 'abc') do
+        with_config_value(:omniauth_elixir_aai_secret, '123') do
+          with_relative_root(nil) do
+            config = Seek::Config.omniauth_elixir_aai_config
+            assert_equal 'abc', config[:client_options][:identifier]
+            assert_equal '123', config[:client_options][:secret]
+            assert_equal '/identities/auth/elixir_aai/callback', config[:callback_path]
+            assert_equal 'https://secure.website:3001/identities/auth/elixir_aai/callback', config[:client_options][:redirect_uri]
+          end
+        end
+      end
+    end
+    with_config_value(:site_base_host, 'http://localhost') do
+      with_relative_root('/seeks/seek1') do
+        config = Seek::Config.omniauth_elixir_aai_config
+        assert_equal '/seeks/seek1/identities/auth/elixir_aai/callback', config[:callback_path]
+        assert_equal 'http://localhost/seeks/seek1/identities/auth/elixir_aai/callback', config[:client_options][:redirect_uri]
+      end
     end
   end
 end

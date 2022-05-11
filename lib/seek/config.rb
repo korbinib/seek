@@ -3,32 +3,25 @@ module Seek
   # Convention to create a new fallback is to name the method <setting_name>_fallback
   module Fallbacks
     # fallback attributes
-    def project_long_name_fallback
-      if project_type.blank?
-        project_name.to_s
-      else
-        "#{project_name} #{project_type}"
-      end
-    end
 
-    def dm_project_name_fallback
-      project_name
+    def instance_admins_name_fallback
+      instance_name
     end
     
-    def dm_project_link_fallback
-      project_link
+    def instance_admins_link_fallback
+      instance_link
     end
 
     def application_name_fallback
-      "#{project_name} SEEK"
+      "#{instance_name} SEEK"
     end
 
     def header_image_link_fallback
-      dm_project_link
+      instance_admins_link
     end
 
     def header_image_title_fallback
-      dm_project_name
+      instance_admins_name
     end
   end
 
@@ -36,10 +29,7 @@ module Seek
   # Convention for creating a new propagator is to add a method named <setting_name>_propagate
   module Propagators
     def site_base_host_propagate
-      script_name = (SEEK::Application.config.relative_url_root || '/')
-      ActionMailer::Base.default_url_options = { host: host_with_port,
-                                                 protocol: host_scheme,
-                                                 script_name: script_name }
+      Rails.application.default_url_options = site_url_options
     end
 
     def smtp_propagate
@@ -106,7 +96,7 @@ module Seek
         SEEK::Application.config.middleware.use ExceptionNotification::Rack,
                                                 email: {
                                                   sender_address: [noreply_sender],
-                                                  email_prefix: "[ #{application_name} ERROR ] ",
+                                                  email_prefix: "[ #{instance_name} ERROR ] ",
                                                   exception_recipients: exception_notification_recipients.nil? ? [] : exception_notification_recipients.split(/[, ]/)
                                                 }
       else
@@ -271,6 +261,24 @@ module Seek
       URI(Seek::Config.site_base_host).scheme
     end
 
+    # Includes trailing slash so it can be used to safely append subpaths, e.g.
+    # `Seek::Config.site_base_url.join('data_files')`
+    def site_base_url
+      uri = Addressable::URI.parse(Seek::Config.site_base_host)
+      uri.path = (Rails.application.config.relative_url_root || '').chomp('/') + '/'
+      uri
+    end
+
+    def site_url_options
+      u = URI.parse(site_base_host)
+      {
+        host: u.host,
+        port: u.port,
+        protocol: u.scheme,
+        script_name: (SEEK::Application.config.relative_url_root || '/')
+      }
+    end
+
     def write_attr_encrypted_key
       File.open(attr_encrypted_key_path, 'wb') do |f|
         f << SecureRandom.random_bytes(32)
@@ -280,18 +288,6 @@ module Seek
     def write_secret_key_base
       File.open(secret_key_base_path, 'w') do |f|
         f << SecureRandom.hex(64)
-      end
-    end
-
-    def soffice_available?(cached=false)
-      @@soffice_available = nil unless cached
-      begin
-        port = ConvertOffice::ConvertOfficeConfig.options[:soffice_port]
-        soc = TCPSocket.new('localhost', port)
-        soc.close
-        true
-      rescue
-        false
       end
     end
 
@@ -308,10 +304,11 @@ module Seek
     end
 
     def omniauth_elixir_aai_config
-      callback_path = '/identities/auth/elixir_aai/callback'
+      # Cannot use url helpers here because routes are not loaded at this point :( -Finn
+      callback_path = 'identities/auth/elixir_aai/callback'
 
       {
-          callback_path: callback_path,
+          callback_path: "#{Rails.application.config.relative_url_root}/#{callback_path}",
           name: :elixir_aai,
           scope: [:openid, :email],
           response_type: 'code',
@@ -324,7 +321,7 @@ module Seek
           client_options: {
               identifier: omniauth_elixir_aai_client_id,
               secret: omniauth_elixir_aai_secret,
-              redirect_uri: "#{site_base_host.chomp('/')}#{callback_path}",
+              redirect_uri: site_base_url.join(callback_path).to_s,
               scheme: 'https',
               host: 'login.elixir-czech.org',
               port: 443,
@@ -420,6 +417,16 @@ module Seek
       result
     end
 
+    # transfers a setting value from the old_name to the new_name setting value, for use when renaming a setting.
+    # Creates a new record for the new setting (if set), and cleans up and removes the old record. Ignores any defaults that are set
+    def transfer_value(old_name, new_name)
+      if old_value = Settings.global.get(old_name)
+        set_value(new_name,old_value)
+        Settings.destroy(old_name)
+      end
+      Settings.defaults.delete(old_name.to_s)
+    end
+
     def setting(setting, options = {})
       options ||= {}
       setter = "#{setting}="
@@ -495,5 +502,6 @@ module Seek
     def self.schema_org_supported?
       true
     end
+
   end
 end

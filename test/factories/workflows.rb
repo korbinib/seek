@@ -82,10 +82,14 @@ Factory.define(:max_workflow, class: Workflow) do |f|
   f.projects { [Factory.build(:max_project)] }
   f.assays {[Factory.build(:max_assay, policy: Factory(:public_policy))]}
   f.relationships {[Factory(:relationship, predicate: Relationship::RELATED_TO_PUBLICATION, other_object: Factory(:publication))]}
+  f.tags 'red, green, blue'
+  f.edam_operations 'Clustering'
+  f.edam_topics 'Chemistry'
   f.after_create do |workflow|
     workflow.content_blob = Factory.create(:cwl_content_blob, asset: workflow, asset_version: workflow.version)
   end
   f.other_creators 'Blogs, Joe'
+
 end
 
 Factory.define(:cwl_workflow, parent: :workflow) do |f|
@@ -167,4 +171,9 @@ Factory.define(:monitored_workflow, parent: :workflow) do |f|
   f.after_create do |workflow|
     workflow.latest_version.update_column(:monitored, true)
   end
+end
+
+Factory.define(:test_data_workflow_data_file_relationship, class: WorkflowDataFileRelationship) do |f|
+  f.title 'Test data'
+  f.key 'test'
 end

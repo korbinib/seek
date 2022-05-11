@@ -265,11 +265,11 @@ module AssetsHelper
     image_tag_for_key('download', polymorphic_path([fileinfo.asset, fileinfo], action: :download, code: params[:code]), 'Download', { title: 'Download this file' }, '')
   end
 
-  def add_to_dropdown(item)
+  def add_new_item_to_dropdown(item)
     return unless Seek::AddButtons.add_dropdown_for(item)
     tooltip = "This option allows you to add a new item, whilst associating it with this #{text_for_resource(item)}"
     dropdown_button(t('add_new_dropdown.button'), 'attach', menu_options: {class: 'pull-right', id: 'item-admin-menu'}, tooltip:tooltip) do
-      add_item_to_options(item) do |text, path|
+      add_new_item_to_options(item) do |text, path|
         content_tag(:li) do
           image_tag_for_key('add', path, text, nil, text)
         end
@@ -277,10 +277,10 @@ module AssetsHelper
     end
   end
 
-  def add_item_to_options(item)
+  def add_new_item_to_options(item)
     elements = []
     Seek::AddButtons.add_for_item(item).each do |type,param|
-
+      next unless type.feature_enabled?
       text="#{t('add_new_dropdown.option')} #{t(type.name.underscore)}"
       path = new_polymorphic_path(type,param=>item.id)
       elements << yield(text,path)
@@ -291,11 +291,7 @@ module AssetsHelper
   # whether the viewable content is available, or converted to pdf, or capable to be converted to pdf
   def view_content_available?(content_blob)
     return true if content_blob.is_text? || content_blob.is_pdf? || content_blob.is_cwl? || content_blob.is_image?
-    if content_blob.is_pdf_viewable?
-      content_blob.file_exists?('pdf') || Seek::Config.soffice_available?
-    else
-      false
-    end
+    content_blob.is_pdf_viewable?
   end
 
   def source_link_button(source_link)
@@ -334,6 +330,13 @@ module AssetsHelper
     return nil unless Seek::Config.email_enabled
     return nil unless get_email_recipients(resource).present?
     ContactRequestMessageLog.recent_requests(current_user.try(:person), resource).first
+  end
+
+  def edam_ontology_items(ontologyCVItems)
+    ontologyCVItems.collect do |item|
+      browser_url = "https://edamontology.github.io/edam-browser/#{URI.parse(item.iri).path.gsub('/','#')}"
+      link_to(item.label, browser_url, target: :_blank).html_safe
+    end.join(', ').html_safe
   end
 
 end
