@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_02_11_083725) do
+ActiveRecord::Schema.define(version: 2022_05_31_131834) do
 
   create_table "activity_logs", id: :integer,  force: :cascade do |t|
     t.string "action"
@@ -583,8 +583,8 @@ ActiveRecord::Schema.define(version: 2022_02_11_083725) do
   end
 
   create_table "documents_workflows", id: false,  force: :cascade do |t|
-    t.integer "workflow_id", null: false
-    t.integer "document_id", null: false
+    t.bigint "workflow_id", null: false
+    t.bigint "document_id", null: false
     t.index ["document_id", "workflow_id"], name: "index_documents_workflows_on_doc_workflow"
     t.index ["workflow_id", "document_id"], name: "index_documents_workflows_on_workflow_doc"
   end
@@ -1292,8 +1292,8 @@ ActiveRecord::Schema.define(version: 2022_02_11_083725) do
   end
 
   create_table "presentations_workflows", id: false,  force: :cascade do |t|
-    t.integer "workflow_id", null: false
-    t.integer "presentation_id", null: false
+    t.bigint "workflow_id", null: false
+    t.bigint "presentation_id", null: false
     t.index ["presentation_id", "workflow_id"], name: "index_presentations_workflows_on_pres_workflow"
     t.index ["workflow_id", "presentation_id"], name: "index_presentations_workflows_on_workflow_pres"
   end
@@ -1912,20 +1912,8 @@ ActiveRecord::Schema.define(version: 2022_02_11_083725) do
 
   create_table "studyhub_resources",  force: :cascade do |t|
     t.json "resource_json"
-    t.string "nfdi_person_in_charge"
-    t.string "contact_stage"
-    t.string "data_source"
-    t.string "comment"
-    t.string "exclusion_mica_reason"
-    t.string "exclusion_seek_reason"
-    t.string "exclusion_studyhub_reason"
-    t.boolean "inclusion_studyhub"
-    t.boolean "inclusion_seek"
-    t.boolean "inclusion_mica"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.bigint "assay_id"
-    t.bigint "study_id"
     t.integer "studyhub_resource_type_id"
     t.integer "contributor_id"
     t.integer "policy_id"
@@ -1934,8 +1922,6 @@ ActiveRecord::Schema.define(version: 2022_02_11_083725) do
     t.text "title"
     t.integer "stage"
     t.datetime "last_used_at"
-    t.index ["assay_id"], name: "index_studyhub_resources_on_assay_id"
-    t.index ["study_id"], name: "index_studyhub_resources_on_study_id"
   end
 
   create_table "subscriptions", id: :integer,  force: :cascade do |t|

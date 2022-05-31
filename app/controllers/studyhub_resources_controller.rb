@@ -319,11 +319,8 @@ class StudyhubResourcesController < ApplicationController
 
 
 
-    params.require(:studyhub_resource).permit(:title,:studyhub_resource_type_id, :comment, { resource_json: {} }, \
-                                            :nfdi_person_in_charge, :contact_stage, :data_source,{ project_ids: [] }, { document_ids: [] },\
-                                            :comment, :exclusion_mica_reason, :exclusion_seek_reason, \
-                                            :exclusion_studyhub_reason, :inclusion_studyhub, :inclusion_seek, \
-                                            :inclusion_mica, :commit_button, :ui_request)
+    params.require(:studyhub_resource).permit(:title,:studyhub_resource_type_id, { resource_json: {} }, \
+                                            { project_ids: [] }, { document_ids: [] },:commit_button, :ui_request)
   end
 
 
