@@ -7575,6 +7575,9 @@
                                 },
                                 "events": {
                                     "$ref": "#/definitions/eventReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -7586,7 +7589,8 @@
                                 "studies",
                                 "assays",
                                 "publications",
-                                "events"
+                                "events",
+                                "workflows"
                             ],
                             "additionalProperties": false
                         },
@@ -7677,6 +7681,9 @@
                                 },
                                 "events": {
                                     "$ref": "#/definitions/eventReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -7757,6 +7764,9 @@
                                 },
                                 "events": {
                                     "$ref": "#/definitions/eventReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "additionalProperties": false
@@ -7818,6 +7828,9 @@
                                 },
                                 "publications": {
                                     "$ref": "#/definitions/publicationReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -7828,7 +7841,8 @@
                                 "investigations",
                                 "studies",
                                 "assays",
-                                "publications"
+                                "publications",
+                                "workflows"
                             ],
                             "additionalProperties": false
                         },
@@ -7913,6 +7927,9 @@
                                 },
                                 "assays": {
                                     "$ref": "#/definitions/assayReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -7987,6 +8004,9 @@
                                 },
                                 "assays": {
                                     "$ref": "#/definitions/assayReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "additionalProperties": false
@@ -9374,6 +9394,9 @@
                                 },
                                 "events": {
                                     "$ref": "#/definitions/eventReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -9385,7 +9408,8 @@
                                 "studies",
                                 "assays",
                                 "publications",
-                                "events"
+                                "events",
+                                "workflows"
                             ],
                             "additionalProperties": false
                         },
@@ -9473,6 +9497,9 @@
                                 },
                                 "events": {
                                     "$ref": "#/definitions/eventReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -9550,6 +9577,9 @@
                                 },
                                 "events": {
                                     "$ref": "#/definitions/eventReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "additionalProperties": false
@@ -10189,7 +10219,8 @@
                                 "models",
                                 "publications",
                                 "presentations",
-                                "events"
+                                "events",
+                                "workflows"
                             ],
                             "additionalProperties": false
                         },
@@ -10261,6 +10292,9 @@
                                 },
                                 "publications": {
                                     "$ref": "#/definitions/publicationReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -10271,7 +10305,8 @@
                                 "investigations",
                                 "studies",
                                 "assays",
-                                "publications"
+                                "publications",
+                                "workflows"
                             ],
                             "additionalProperties": false
                         },
@@ -10356,6 +10391,9 @@
                                 },
                                 "assays": {
                                     "$ref": "#/definitions/assayReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "required": [
@@ -10430,6 +10468,9 @@
                                 },
                                 "assays": {
                                     "$ref": "#/definitions/assayReferencesList"
+                                },
+                                "workflows": {
+                                    "$ref": "#/definitions/workflowReferencesList"
                                 }
                             },
                             "additionalProperties": false
@@ -10872,6 +10913,15 @@
                                 },
                                 "sops": {
                                     "$ref": "#/definitions/sopReferencesList"
+                                },
+                                "presentations": {
+                                    "$ref": "#/definitions/presentationReferencesList"
+                                },
+                                "data_files": {
+                                    "$ref": "#/definitions/dataFileReferencesList"
+                                },
+                                "documents": {
+                                    "$ref": "#/definitions/documentReferencesList"
                                 }
                             },
                             "required": [
@@ -10883,7 +10933,10 @@
                                 "studies",
                                 "assays",
                                 "publications",
-                                "sops"
+                                "sops",
+                                "presentations",
+                                "data_files",
+                                "documents"
                             ],
                             "additionalProperties": false
                         },
@@ -11003,6 +11056,15 @@
                                 },
                                 "sops": {
                                     "$ref": "#/definitions/sopReferencesList"
+                                },
+                                "presentations": {
+                                    "$ref": "#/definitions/presentationReferencesList"
+                                },
+                                "data_files": {
+                                    "$ref": "#/definitions/dataFileReferencesList"
+                                },
+                                "documents": {
+                                    "$ref": "#/definitions/documentReferencesList"
                                 }
                             },
                             "required": [
@@ -11100,6 +11162,15 @@
                                 },
                                 "sops": {
                                     "$ref": "#/definitions/sopReferencesList"
+                                },
+                                "presentations": {
+                                    "$ref": "#/definitions/presentationReferencesList"
+                                },
+                                "data_files": {
+                                    "$ref": "#/definitions/dataFileReferencesList"
+                                },
+                                "documents": {
+                                    "$ref": "#/definitions/documentReferencesList"
                                 }
                             },
                             "additionalProperties": false
