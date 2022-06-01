@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_05_31_131834) do
+ActiveRecord::Schema.define(version: 2022_06_01_145041) do
 
   create_table "activity_logs", id: :integer,  force: :cascade do |t|
     t.string "action"
@@ -1409,6 +1409,13 @@ ActiveRecord::Schema.define(version: 2022_05_31_131834) do
     t.integer "strain_id"
   end
 
+  create_table "projects_studyhub_resource_versions",  force: :cascade do |t|
+    t.bigint "version_id"
+    t.bigint "project_id"
+    t.index ["project_id"], name: "index_projects_studyhub_resource_versions_on_project_id"
+    t.index ["version_id"], name: "index_projects_studyhub_resource_versions_on_version_id"
+  end
+
   create_table "projects_studyhub_resources",  force: :cascade do |t|
     t.bigint "studyhub_resource_id"
     t.bigint "project_id"
@@ -1910,6 +1917,27 @@ ActiveRecord::Schema.define(version: 2022_05_31_131834) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "studyhub_resource_versions",  force: :cascade do |t|
+    t.string "title"
+    t.text "description"
+    t.integer "version"
+    t.string "contributor_type"
+    t.bigint "contributor_id"
+    t.string "uuid"
+    t.bigint "policy_id"
+    t.string "first_letter", limit: 1
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "last_used_at"
+    t.bigint "studyhub_resource_id"
+    t.string "doi"
+    t.text "revision_comments"
+    t.integer "visibility"
+    t.index ["contributor_type", "contributor_id"], name: "index_studyhub_resource_versions_and_contributor_id"
+    t.index ["policy_id"], name: "index_studyhub_resource_versions_on_policy_id"
+    t.index ["studyhub_resource_id"], name: "index_studyhub_resource_versions_on_studyhub_resource_id"
+  end
+
   create_table "studyhub_resources",  force: :cascade do |t|
     t.json "resource_json"
     t.datetime "created_at", null: false
@@ -1922,6 +1950,8 @@ ActiveRecord::Schema.define(version: 2022_05_31_131834) do
     t.text "title"
     t.integer "stage"
     t.datetime "last_used_at"
+    t.string "doi"
+    t.integer "version", default: 1
   end
 
   create_table "subscriptions", id: :integer,  force: :cascade do |t|

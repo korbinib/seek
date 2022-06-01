@@ -7,6 +7,19 @@ class StudyhubResource < ApplicationRecord
   has_extended_custom_metadata
   acts_as_asset
 
+  acts_as_doi_parent(child_accessor: :versions)
+
+  has_one :content_blob, -> (r) { where('content_blobs.asset_version = ?', r.version) }, :as => :asset, :foreign_key => :asset_id
+
+  explicit_versioning(version_column: 'version', sync_ignore_columns: ['doi']) do
+
+    acts_as_doi_mintable(proxy: :parent, general_type: 'Text')
+    acts_as_versioned_resource
+
+    has_one :content_blob, -> (r) { where('content_blobs.asset_version = ? AND content_blobs.asset_type = ?', r.version, r.parent.class.name) },
+            primary_key: :studyhub_resource_id, foreign_key: :asset_id
+  end
+
   validates :resource_json, presence: true, on: %i[create update], unless: :is_ui_request?
   validates :resource_json, resource_json:true, on:  %i[create update], unless: :is_ui_request?
   validate :check_resource_use_rights, on:  [:create, :update], unless: :is_ui_request?
