@@ -15,6 +15,6 @@ class CreateStudyhubResourceVersions < ActiveRecord::Migration[5.2]
       t.string :doi
       t.text :revision_comments
       t.integer :visibility
-    ends
+    end
   end
 end

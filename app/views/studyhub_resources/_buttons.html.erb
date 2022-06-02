@@ -28,6 +28,15 @@
 
 <%= item_actions_dropdown do %>
   <% if item.can_edit? %>
+    <% if item.versioned? -%>
+      <li>
+        <% if item.new_version_supported? %>
+            <%= link_to (image("new") + ' Register new version'), '#', onclick: "$j('#upload_new_version_form').fadeToggle(); return false" %>
+        <% else %>
+          <%= link_to (image("new") + ' Register new version'), '#', disabled: true, class: 'disabled' %>
+        <% end %>
+      </li>
+    <% end -%>
     <li><%= image_tag_for_key('edit', edit_studyhub_resource_path(item), "Edit #{t('studyhub_resource')}", nil, "Edit #{t('studyhub_resource')}") -%></li>
   <% end %>
   <% if show_publish_button %>

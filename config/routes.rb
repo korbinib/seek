@@ -452,21 +452,6 @@ SEEK::Application.routes.draw do
   # to be removed as STI does not work in too many places
   # resources :openbis_assays, controller: 'assays', type: 'OpenbisAssay'
   #
-    ### STUDYHUB RESOURCES ###
-
-  resources :studyhub_resources, concerns: [:has_content_blobs, :asset,:publishable] do
-  collection do
-      post :preview_stages
-      post :new_resource
-      post :create_content_blob
-      post :create_metadata
-    end
-
-    member do
-      get :upload_file
-      patch :manage_update
-    end
-  end
 
 
   ### ASSAY AND TECHNOLOGY TYPES ###
@@ -611,6 +596,23 @@ SEEK::Application.routes.draw do
   resources :events, concerns: [:asset] do
     resources :people, :programmes, :projects, :data_files, :publications, :documents, :presentations, :collections, only: [:index]
   end
+
+  ### STUDYHUB RESOURCES ###
+
+  resources :studyhub_resources, concerns: [:has_content_blobs, :has_versions, :asset,:publishable] do
+    collection do
+      post :preview_stages
+      post :new_resource
+      post :create_content_blob
+      post :create_metadata
+    end
+
+    member do
+      get :upload_file
+      patch :manage_update
+    end
+  end
+
 
   resource :policies do
     collection do

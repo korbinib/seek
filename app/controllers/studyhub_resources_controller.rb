@@ -104,6 +104,28 @@ class StudyhubResourcesController < ApplicationController
   end
 
 
+  def create_version
+    if handle_upload_data(true)
+      comments = params[:revision_comments]
+
+      respond_to do |format|
+        if @studyhub_resource.save_as_new_version(comments)
+          flash[:notice] = "New version uploaded - now on version #{@studyhub_resource.version}"
+        else
+          flash[:error] = "Unable to save new version"
+        end
+
+        format.html { redirect_to @studyhub_resource }
+      end
+    else
+      flash[:error] = flash.now[:error]
+      redirect_to @studyhub_resource
+    end
+  end
+
+
+
+
   def edit
     @studyhub_resource = StudyhubResource.find(params[:id])
     respond_to do |format|
