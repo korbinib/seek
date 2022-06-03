@@ -13,13 +13,6 @@ class StudyhubResourcesController < ApplicationController
 
   api_actions :index, :show, :create, :update, :destroy
 
-  def show
-    respond_to do |format|
-      format.html
-      format.json { render json: @studyhub_resource }
-    end
-  end
-
   def download
     @studyhub_resource.just_used
     download_single(@studyhub_resource.content_blob)
