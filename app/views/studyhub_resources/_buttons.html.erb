@@ -28,7 +28,7 @@
 
 <%= item_actions_dropdown do %>
   <% if item.can_edit? %>
-    <% if item.versioned? -%>
+    <% if item.versioned? && !item.is_studytype? -%>
       <li>
         <% if item.new_version_supported? %>
             <%= link_to (image("new") + ' Register new version'), '#', onclick: "$j('#upload_new_version_form').fadeToggle(); return false" %>
