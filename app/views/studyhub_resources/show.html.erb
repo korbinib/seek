@@ -1,25 +1,36 @@
-<% nfdi_type =  @studyhub_resource.resource_json["ids"].select{|x| x["id_type"] == "NFDI4Health"}%>
+
+<% nfdi_type =  @display_studyhub_resource.resource_json["ids"].select{|x| x["id_type"] == "NFDI4Health"}%>
 <% nfdi_subresources =  nfdi_type.select{|x| x["id_relation_type"] == "has part" && (!StudyhubResource.find(x["id_identifier"]).is_studytype?) }%>
 <% nfdi_superresources =  nfdi_type.select{|x| x["id_relation_type"] == "has part" && StudyhubResource.find(x["id_identifier"]).is_studytype? }%>
 
-<% other_types =  @studyhub_resource.resource_json["ids"].reject{|x| x["id_type"] == "NFDI4Health"} %>
-
-<%= render :partial => "general/item_title",:locals => {:item=>@studyhub_resource, :buttons_partial => 'studyhub_resources/buttons'} %>
+<% other_types =  @display_studyhub_resource.resource_json["ids"].reject{|x| x["id_type"] == "NFDI4Health"} %>
+<% unless @studyhub_resource.is_studytype? %>
+  <%= render :partial => "general/item_title",:locals => {:item=>@studyhub_resource, :buttons_partial => 'studyhub_resources/buttons'} %>
+<% else %>
+<%= render :partial => "general/item_title",:locals => {:item => @studyhub_resource, :version => @display_studyhub_resource.version,
+                                                        :buttons_partial => 'studyhub_resources/buttons'} -%>
+<% end %>
 <%= render :partial=>"assets/upload_new_version_form", :locals=>{:resource=>@studyhub_resource} -%>
 
 <div class="row">
   <div class="col-md-9 col-sm-8 box_about_actor">
     <%= show_resource_stage(@studyhub_resource) if @studyhub_resource.can_edit? %>
-    <%= persistent_resource_id(@studyhub_resource) %>
-    <%= render :partial => 'projects/show_project_relationship', :locals => {:resource => @studyhub_resource}%>
+    <%= persistent_resource_id(@display_studyhub_resource) %>
+
+    <% unless @studyhub_resource.is_studytype? %>
+      <%= render :partial => 'assets/fileinfo',:object=>@display_studyhub_resource.content_blob -%>
+      <%= render :partial => "assets/asset_doi", :locals => {:displayed_resource=>@display_studyhub_resource} %>
+      <%= render :partial => 'projects/show_project_relationship', :locals => {:resource => @studyhub_resource}%>
+    <% end %>
+
     <p>
       <label>Resource Type:</label>
       <%= @studyhub_resource.studyhub_resource_type.title %>
     </p>
 
-    <%= studyhub_resource_items @studyhub_resource.resource_json['resource_titles'], "title"  -%>
-    <%= studyhub_resource_items @studyhub_resource.resource_json['resource_acronyms'], "acronym"  -%>
-    <%= studyhub_resource_items @studyhub_resource.resource_json['resource_descriptions'], "description"  -%>
+    <%= studyhub_resource_items @display_studyhub_resource.resource_json['resource_titles'], "title"  -%>
+    <%= studyhub_resource_items @display_studyhub_resource.resource_json['resource_acronyms'], "acronym"  -%>
+    <%= studyhub_resource_items @display_studyhub_resource.resource_json['resource_descriptions'], "description"  -%>
 
     <% unless nfdi_subresources.empty? %>
     <p>
@@ -42,22 +53,24 @@
       </p>
     <% end %>
 
-    <% unless @studyhub_resource.resource_json['roles'].blank? %>
+    <% unless @display_studyhub_resource.resource_json['roles'].blank? %>
       <%= panel("Contributors:") do %>
-        <%= studyhub_resource_roles @studyhub_resource.resource_json['roles'] -%>
+        <%= studyhub_resource_roles @display_studyhub_resource.resource_json['roles'] -%>
       <% end %>
     <% end %>
 
 
     <%= panel("General Resource Information:") do %>
-      <%= render partial: 'studyhub_resources/studyhub_resource_value', locals: { resource: @studyhub_resource.resource_json } %>
+      <%= render partial: 'studyhub_resources/studyhub_resource_value', locals: { resource: @display_studyhub_resource.resource_json } %>
     <% end %>
 
-    <% if @studyhub_resource.is_studytype? && !@studyhub_resource.resource_json['study_design'].values.select{|x| !x.blank?}.blank? %>
+    <% if @studyhub_resource.is_studytype? && !@display_studyhub_resource.resource_json['study_design'].values.select{|x| !x.blank?}.blank? %>
     <%= panel("Study Design:") do %>
-      <%= render partial: 'studyhub_resources/studyhub_study_design_value', locals: { resource: @studyhub_resource.resource_json['study_design'] } %>
+      <%= render partial: 'studyhub_resources/studyhub_study_design_value', locals: { resource: @display_studyhub_resource.resource_json['study_design'] } %>
     <% end %>
     <% end %>
+
+    <%= render :partial=>"assets/resource_version_details", :locals=>{:displayed_resource=>@display_studyhub_resource, :resource=>@studyhub_resource} %>
   </div>
 
   <div class="col-md-3 col-sm-4">

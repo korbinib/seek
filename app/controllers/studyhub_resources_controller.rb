@@ -5,8 +5,9 @@ class StudyhubResourcesController < ApplicationController
   include Seek::IndexPager
   include Seek::Publishing::PublishingCommon
 
-  before_action :find_and_authorize_requested_item, only: %i[edit update destroy manage manage_update show download create_content_blob]
+  before_action :find_and_authorize_requested_item, :except => [ :index, :new, :create]
   before_action :find_assets, only: [:index]
+  before_action :find_display_asset, only: [:show, :download]
   before_action :login_required, only: [:create, :create_content_blob, :new_resource]
   before_action :check_studyhub_resource_type, only: [:create, :update], if: :json_api_request?
   before_action :check_can_publish, only: [:publish], if: :json_api_request?
