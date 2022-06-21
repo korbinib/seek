@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_06_01_145041) do
+ActiveRecord::Schema.define(version: 2022_06_08_075642) do
 
   create_table "activity_logs", id: :integer,  force: :cascade do |t|
     t.string "action"
@@ -1933,9 +1933,12 @@ ActiveRecord::Schema.define(version: 2022_06_01_145041) do
     t.string "doi"
     t.text "revision_comments"
     t.integer "visibility"
+    t.json "resource_json"
+    t.bigint "studyhub_resource_type_id"
     t.index ["contributor_type", "contributor_id"], name: "index_studyhub_resource_versions_and_contributor_id"
     t.index ["policy_id"], name: "index_studyhub_resource_versions_on_policy_id"
     t.index ["studyhub_resource_id"], name: "index_studyhub_resource_versions_on_studyhub_resource_id"
+    t.index ["studyhub_resource_type_id"], name: "index_studyhub_resource_versions_on_studyhub_resource_type_id"
   end
 
   create_table "studyhub_resources",  force: :cascade do |t|
